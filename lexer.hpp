@@ -87,7 +87,6 @@ private:
   Tokens& m_tokens;
   std::string m_buffer;
   char m_last_char = 0;
-  bool m_eof = false;
 
   inline char next_char() {
     m_last_char = m_in.get() ;
