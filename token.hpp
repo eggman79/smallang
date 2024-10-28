@@ -8,7 +8,7 @@
 class Token {
 public:
   enum class Kind {
-    None, Fun, Struct, Union, 
+    None, Fun, Struct, Union, Return,
     Id, StringLiteral, I32Literal, 
     LeftParen, RightParen, LeftBrace, RightBrace, 
     Add, Sub, Mul, Div, Assign, Equals, Great, Less, GreatOrEqual, LessOrEqual,

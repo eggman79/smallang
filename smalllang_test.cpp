@@ -3,6 +3,7 @@
 
 #include "lexer.hpp"
 #include "token.hpp"
+#include "parser.hpp"
 
 TEST(Lexer, Simple) {
   std::istringstream in("fun struct union \"test\"");
@@ -21,6 +22,14 @@ TEST(Lexer, Simple) {
   auto eof1_token = &lexer.next();
   auto eof2_token = &lexer.next();
   ASSERT_EQ(eof1_token, eof2_token);
+}
+
+TEST(Parser, Simple) {
+  Lexer::Tokens tokens;
+  std::istringstream in("fun test(i8* str, i32 len) -> i32 { return 10 }");
+  Lexer lexer(in, tokens);
+  Parser parser(lexer);
+  parser.parse();
 }
 
 int main(int argc, char* argv[]) {
