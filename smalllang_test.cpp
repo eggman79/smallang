@@ -4,6 +4,8 @@
 #include "lexer.hpp"
 #include "token.hpp"
 #include "parser.hpp"
+#include "ast.hpp"
+#include "id_cache.hpp"
 
 TEST(Lexer, Simple) {
   std::istringstream in("fun struct union \"test\"");
@@ -22,6 +24,27 @@ TEST(Lexer, Simple) {
   auto eof1_token = &lexer.next();
   auto eof2_token = &lexer.next();
   ASSERT_EQ(eof1_token, eof2_token);
+}
+
+TEST(Ast, Simple) {
+  Ast ast;
+  auto ast_id = ast.create(AstNode::Kind::Value);
+  auto& ast_node = ast.get_node(ast_id);
+  IdCache id_cache;
+  ast_node.node.value.value_kind = AstNode::ValueKind::LocalVariable;
+  ast_node.node.local_variable.id = id_cache.get("a", 1);
+
+  EXPECT_EQ(ast_node.kind, AstNode::Kind::Value);
+  EXPECT_EQ(ast_node.node.value.value_kind, AstNode::ValueKind::LocalVariable);
+
+}
+
+TEST(IdCache, Simple) {
+  IdCache id_cache;
+  auto index = id_cache.get("test", 4);
+  EXPECT_EQ(index, id_cache.get("test", 4));
+  EXPECT_STREQ(id_cache.get(index).str, "test");
+  EXPECT_EQ(id_cache.get(index).length, 4);
 }
 
 TEST(Parser, Simple) {
