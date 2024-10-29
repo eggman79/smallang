@@ -145,6 +145,26 @@ TEST(Ast, Stmt) {
   auto& scope_node = ast.get_node(scope_idx);
   auto block_stmt_idx = ast.create(AstNode::Kind::BlockStmt);
   auto& block_stmt = ast.get_node(block_stmt_idx);
+  scope_node.node.block_scope.block_stmt = block_stmt_idx;
+  block_stmt.node.block_stmt.block_scope = scope_idx;
+
+  auto i32_type_idx = ast.create(AstNode::Kind::I32Type);
+  auto local_var_idx = ast.create(AstNode::Kind::LocalVariable);
+  auto& local_var = ast.get_node(local_var_idx);
+  local_var.node.local_variable.name = id_cache.get("a");
+  local_var.node.local_variable.value.type = i32_type_idx;
+
+  auto init_idx = ast.create(AstNode::Kind::I32Literal);
+  auto& init_node = ast.get_node(init_idx);
+  init_node.node.i32_literal.value.type = i32_type_idx;
+  init_node.node.i32_literal.literal_value = 100;
+
+  auto var_decl_stmt_idx = ast.create(AstNode::Kind::VariableDeclStmt);
+  auto& var_decl_stmt = ast.get_node(var_decl_stmt_idx);
+  var_decl_stmt.node.variable_decl_stmt.variable = local_var_idx;
+  var_decl_stmt.node.variable_decl_stmt.init_expr = init_idx;
+
+  block_stmt.node.block_stmt.add_stmt(var_decl_stmt_idx);
 }
 
 TEST(Ast, Expession) {

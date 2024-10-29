@@ -60,7 +60,7 @@ struct AstNode {
     ParenthExpr, NegExpr,
     StructField, UnionField,
     Function, Struct, Union, BlockScope,
-    VariableDeclStmt, BlockStmt, FunctionDeclStmt, StructDeclStmt, UnionDeclStmt, IfElseStmt, WhileStmt,
+    VariableDeclStmt, BlockStmt, FunctionDeclStmt, StructDeclStmt, UnionDeclStmt, IfElseStmt, WhileStmt, ExprStmt,
   };
   enum class StatementKind {};
 
@@ -84,6 +84,7 @@ struct AstNode {
       case AstNode::Kind::UnionDeclStmt:
       case AstNode::Kind::IfElseStmt:
       case AstNode::Kind::WhileStmt:
+      case AstNode::Kind::ExprStmt:
         return true;
       default:
         return false;
