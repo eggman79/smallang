@@ -59,11 +59,11 @@ struct AstNode {
     None, Type, Value, Statement, 
     I8Type, I16Type, I32Type, U8Type, U16Type, U32Type, F32Type, F64Type, 
     StructType, UnionType,
-    FunType, LocalVariable, GlobalVariable, StringLiteral, 
+    FunType, FunTypeWithNamedParams, LocalVariable, GlobalVariable, StringLiteral, 
     I8Literal, I16Literal, I32Literal, U8Literal, U16Literal, U32Literal, 
     F32Literal, F64Literal,
     Expression,
-    Scope,
+    Function, Struct, Union, Class,
   };
   enum class StatementKind {};
 
@@ -72,6 +72,18 @@ struct AstNode {
   AstNode(AstNode&&) = delete;
   AstNode& operator=(const AstNode&) = delete;
   AstNode& operator=(AstNode&&) = delete;
+
+  static bool is_scope(AstNode::Kind kind) {
+    switch (kind) {
+      case AstNode::Kind::Function:
+      case AstNode::Kind::Struct:
+      case AstNode::Kind::Union:
+      case AstNode::Kind::Class:
+        return true;
+      default:
+        return false;
+    }
+  }
 
   static bool is_type(AstNode::Kind kind) {
     switch (kind) {
@@ -113,6 +125,15 @@ struct AstNode {
   }
 
   ~AstNode() {
+    switch (kind) {
+      case AstNode::Kind::FunTypeWithNamedParams:
+        delete node.fun_type_with_named_params.names;
+      case AstNode::Kind::FunType:
+        delete node.fun_type.param_types;
+        break;
+      default:
+      break;
+    }
   }
 
   Kind kind;
@@ -163,8 +184,23 @@ struct AstNode {
       AstNodeIndex return_type;
       std::vector<AstNodeIndex>* param_types;
       IdIndex name;
+
+      void add_param_type(AstNodeIndex type) {
+        if (!param_types) param_types = new std::vector<AstNodeIndex>;
+        param_types->emplace_back(type);
+      }
+    };
+    struct FunTypeWithNamedParams {
+      FunType fun_type;
+      std::vector<IdIndex>* names;
+
+      void add_name(IdIndex id) {
+        if (!names) names = new std::vector<IdIndex>;
+        names->emplace_back(id);
+      }
     };
     FunType fun_type;
+    FunTypeWithNamedParams fun_type_with_named_params;
 
     struct {
       IdIndex name;
@@ -175,6 +211,17 @@ struct AstNode {
       IdIndex name;
       std::vector<AstNodeIndex>* fields;
     } struct_field;
+
+    struct Scope {
+      IdIndex name;
+      OrderedDict* dict;
+    };
+
+    struct {
+      Scope scope;
+      AstNodeIndex function_type;
+    } function;
+
   };
   Node node;
 };

@@ -35,9 +35,27 @@ TEST(OrderedDict, Simple) {
   }
   auto& nodes = dict.get_nodes();
   ASSERT_EQ(nodes.size(), 2);
+
   auto& a_node = ast.get_node(nodes[0]);
   EXPECT_EQ(a_node.kind, AstNode::Kind::LocalVariable);
   EXPECT_STREQ(id_cache.get(a_node.node.local_variable.id).str, "a");
+  
+  auto& b_node = ast.get_node(nodes[1]);
+  EXPECT_EQ(b_node.kind, AstNode::Kind::LocalVariable);
+  EXPECT_STREQ(id_cache.get(b_node.node.local_variable.id).str, "b");
+}
+
+TEST(Ast, FunTypeWithNamedParams) {
+  Ast ast;
+  IdCache id_cache;
+  auto f_idx = ast.create(AstNode::Kind::FunTypeWithNamedParams);
+  auto& f_node = ast.get_node(f_idx);
+  auto& fun_type = f_node.node.fun_type_with_named_params;
+  fun_type.fun_type.add_param_type(ast.create(AstNode::Kind::I32Type));
+  fun_type.add_name(id_cache.get("a"));
+  fun_type.fun_type.add_param_type(ast.create(AstNode::Kind::U32Type));
+  fun_type.add_name(id_cache.get("b"));
+  fun_type.fun_type.return_type = ast.create(AstNode::Kind::F32Type);
 }
 
 TEST(Lexer, Simple) {
