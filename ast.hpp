@@ -62,7 +62,10 @@ struct AstNode {
   };
   enum class StatementKind {};
 
-  AstNode(Kind kind) : kind(kind) {}
+  AstNode(Kind kind) {
+    memset((void*)this, 0, sizeof(AstNode));
+    this->kind = kind;
+  }
   AstNode(const AstNode&) = delete;
   AstNode(AstNode&&) = delete;
   AstNode& operator=(const AstNode&) = delete;
@@ -127,8 +130,13 @@ struct AstNode {
       case AstNode::Kind::FunType:
         delete node.fun_type.param_types;
         break;
+      case AstNode::Kind::Function:
+      case AstNode::Kind::Struct:
+      case AstNode::Kind::Union:
+        delete node.scope.dict;
+        break;
       default:
-      break;
+        break;
     }
   }
 
@@ -143,12 +151,12 @@ struct AstNode {
 
     struct {
       Value value;
-      IdIndex id;
+      IdIndex name;
     } global_variable;
 
     struct {
       Value value;
-      IdIndex id;
+      IdIndex name;
     } local_variable;
 
     struct {
@@ -158,7 +166,7 @@ struct AstNode {
 
     struct StringLiteral {
       Value value;
-      IdIndex id_str;
+      IdIndex string;
     };
 
     template <typename Type>
@@ -199,29 +207,29 @@ struct AstNode {
     FunTypeWithNamedParams fun_type_with_named_params;
 
     struct {
-      IdIndex name;
-      std::vector<AstNodeIndex>* fields;
+      AstNodeIndex struct_scope;
     } struct_type;
 
     struct {
+      Value value;
       IdIndex name;
-      std::vector<AstNodeIndex>* fields;
     } struct_field;
 
     struct Scope {
       IdIndex name;
       OrderedDict* dict;
 
-      void add_named_node(IdIndex id, AstNodeIndex node_idx) {
+      void add_node(AstNodeIndex node_idx, IdIndex name = UndefinedIdIndex) {
         if (!dict) dict = new OrderedDict;
-        dict->append(id, node_idx);
-      }
-
-      void add_node(AstNodeIndex node_idx) {
-        if (!dict) dict = new OrderedDict;
-        dict->append(node_idx);
+        if (name != UndefinedIdIndex) {
+          dict->append(name, node_idx);
+        } else {
+          dict->append(node_idx);
+        }
       }
     };
+
+    Scope scope;
 
     struct {
       Scope scope;
@@ -230,12 +238,6 @@ struct AstNode {
 
     struct StructOrUnion {
       Scope scope;
-      std::vector<AstNodeIndex>* fields;
-
-      void add_field(AstNodeIndex node_idx) {
-        if (!fields) fields = new std::vector<AstNodeIndex>();
-        fields->emplace_back(node_idx);
-      }
     };
 
     StructOrUnion struc;

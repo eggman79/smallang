@@ -15,6 +15,23 @@ TEST(IdCache, Simple) {
   EXPECT_EQ(id_cache.get(index).length, 4);
 }
 
+TEST(Ast, Scope) {
+  Ast ast;
+  IdCache id_cache;
+  auto struct_idx = ast.create(AstNode::Kind::Struct);
+  auto& struct_node = ast.get_node(struct_idx);
+  auto a_field_idx = ast.create(AstNode::Kind::StructField);
+  auto& a_field = ast.get_node(a_field_idx);
+  a_field.node.struct_field.name = id_cache.get("a_field");
+  a_field.node.struct_field.value.type = ast.create(AstNode::Kind::I32Type);
+  struct_node.node.struc.scope.add_node(a_field_idx, a_field.node.struct_field.name);
+  {
+    auto a_field_idx = ast.get_node(struct_idx).node.scope.dict->find(id_cache.get("a_field"));
+    ASSERT_FALSE(a_field_idx == UndefinedAstNodeIndex);
+    ASSERT_STREQ(id_cache.get(ast.get_node(a_field_idx).node.struct_field.name).str, "a_field");
+  }
+}
+
 TEST(OrderedDict, Simple) {
   OrderedDict dict;
   IdCache id_cache;
@@ -23,14 +40,14 @@ TEST(OrderedDict, Simple) {
     auto a_var_idx = ast.create(AstNode::Kind::LocalVariable);
     auto& a_var_node = ast.get_node(a_var_idx);
     a_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
-    a_var_node.node.local_variable.id = id_cache.get("a", 1);
+    a_var_node.node.local_variable.name = id_cache.get("a", 1);
     dict.append(id_cache.get("a", 1), a_var_idx);
   }
   {
     auto b_var_idx = ast.create(AstNode::Kind::LocalVariable);
     auto& b_var_node = ast.get_node(b_var_idx);
     b_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
-    b_var_node.node.local_variable.id = id_cache.get("b", 1);
+    b_var_node.node.local_variable.name = id_cache.get("b", 1);
     dict.append(id_cache.get("b", 1), b_var_idx);
   }
   auto& nodes = dict.get_nodes();
@@ -38,11 +55,11 @@ TEST(OrderedDict, Simple) {
 
   auto& a_node = ast.get_node(nodes[0]);
   EXPECT_EQ(a_node.kind, AstNode::Kind::LocalVariable);
-  EXPECT_STREQ(id_cache.get(a_node.node.local_variable.id).str, "a");
+  EXPECT_STREQ(id_cache.get(a_node.node.local_variable.name).str, "a");
   
   auto& b_node = ast.get_node(nodes[1]);
   EXPECT_EQ(b_node.kind, AstNode::Kind::LocalVariable);
-  EXPECT_STREQ(id_cache.get(b_node.node.local_variable.id).str, "b");
+  EXPECT_STREQ(id_cache.get(b_node.node.local_variable.name).str, "b");
 }
 
 TEST(Ast, FunTypeWithNamedParams) {
@@ -68,6 +85,13 @@ TEST(Ast, FunTypeWithNamedParams) {
     auto& return_type = ast.get_node(node.node.fun_type.return_type);
     ASSERT_EQ(return_type.kind, AstNode::Kind::F32Type);
   }
+}
+
+TEST(Ast, Struct) {
+  Ast ast;
+  IdCache id_cache;
+  auto struc_idx = ast.create(AstNode::Kind::Struct);
+  auto& struc_node = ast.get_node(struc_idx);
 }
 
 TEST(Lexer, Simple) {
@@ -121,20 +145,20 @@ TEST(Ast, Expession) {
 
   auto left_idx = ast.create(AstNode::Kind::StringLiteral);
   auto& left_node = ast.get_node(left_idx);
-  left_node.node.string_literal.id_str = id_cache.get("string_test", strlen("string_test"));
+  left_node.node.string_literal.string = id_cache.get("string_test", strlen("string_test"));
   expr_node.node.expression.left = left_idx;
 
   auto right_idx = ast.create(AstNode::Kind::StringLiteral);
   auto& right_node = ast.get_node(right_idx);
-  right_node.node.string_literal.id_str = id_cache.get("cos", 3);
+  right_node.node.string_literal.string = id_cache.get("cos", 3);
   expr_node.node.expression.right = right_idx;
 
   {
     auto& left_node = ast.get_node(expr_node.node.expression.left);
     auto& right_node = ast.get_node(expr_node.node.expression.right);
 
-    EXPECT_STREQ(id_cache.get(left_node.node.string_literal.id_str).str, "string_test");
-    EXPECT_STREQ(id_cache.get(right_node.node.string_literal.id_str).str, "cos");
+    EXPECT_STREQ(id_cache.get(left_node.node.string_literal.string).str, "string_test");
+    EXPECT_STREQ(id_cache.get(right_node.node.string_literal.string).str, "cos");
   }
 }
 
