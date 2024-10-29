@@ -223,11 +223,16 @@ struct AstNode {
 
     struct {
       Scope scope;
-      AstNodeIndex function_type;
+      AstNodeIndex function_type_with_named_params;
     } function;
 
     struct {
       Scope scope;
+      std::vector<AstNodeIndex>* fields;
+      void add_field(AstNodeIndex node_idx) {
+        if (!fields) fields = new std::vector<AstNodeIndex>();
+        fields->emplace_back(node_idx);
+      }
     } struc;
 
   };
