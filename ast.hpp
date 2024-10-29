@@ -226,6 +226,10 @@ struct AstNode {
       AstNodeIndex function_type;
     } function;
 
+    struct {
+      Scope scope;
+    } struc;
+
   };
   Node node;
 };
