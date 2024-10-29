@@ -123,7 +123,9 @@ struct AstNode {
     }
   }
 
-  ~AstNode() {
+  ~AstNode() { clean(); }
+
+  void clean() {
     switch (kind) {
       case AstNode::Kind::FunTypeWithNamedParams:
         delete node.fun_type_with_named_params.names;
@@ -138,6 +140,8 @@ struct AstNode {
       default:
         break;
     }
+    memset((void*)this, 0, sizeof(AstNode));
+    kind = AstNode::Kind::None;
   }
 
   Kind kind;
@@ -213,6 +217,7 @@ struct AstNode {
     struct {
       Value value;
       IdIndex name;
+      uint32_t offset;
     } struct_field;
 
     struct Scope {
@@ -253,11 +258,23 @@ public:
   }
 
   AstNodeIndex create(AstNode::Kind kind) {
-    nodes.emplace_back(kind);
-    return nodes.size() - 1;
+    if (removed.empty()) {
+      nodes.emplace_back(kind);
+      return nodes.size() - 1;
+    }
+    const auto index = removed.back();
+    nodes[index].kind = kind;
+    removed.pop_back();
+    return index;
+  }
+
+  void remove(AstNodeIndex index) {
+    nodes[index].clean();
+    removed.emplace_back(index);
   }
 private:
   std::deque<AstNode> nodes;
+  std::vector<AstNodeIndex> removed;
 };
 
 #endif  // AST_HPP
