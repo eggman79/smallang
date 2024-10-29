@@ -57,6 +57,7 @@ struct AstNode {
     I8Literal, I16Literal, I32Literal, U8Literal, U16Literal, U32Literal, 
     F32Literal, F64Literal,
     Expression,
+    StructField, UnionField,
     Function, Struct, Union, Class,
   };
   enum class StatementKind {};
@@ -112,6 +113,8 @@ struct AstNode {
       case AstNode::Kind::F32Literal:
       case AstNode::Kind::F64Literal:
       case AstNode::Kind::Expression:
+      case AstNode::Kind::StructField:
+      case AstNode::Kind::UnionField:
         return true;
       default:
         return false;
@@ -226,15 +229,18 @@ struct AstNode {
       AstNodeIndex function_type_with_named_params;
     } function;
 
-    struct {
+    struct StructOrUnion {
       Scope scope;
       std::vector<AstNodeIndex>* fields;
+
       void add_field(AstNodeIndex node_idx) {
         if (!fields) fields = new std::vector<AstNodeIndex>();
         fields->emplace_back(node_idx);
       }
-    } struc;
+    };
 
+    StructOrUnion struc;
+    StructOrUnion unio;
   };
   Node node;
 };
