@@ -195,7 +195,9 @@ TEST(Parser, Simple) {
   Lexer::Tokens tokens;
   std::istringstream in("fun test(i8* str, i32 len) -> i32 { return 10 }");
   Lexer lexer(in, tokens);
-  Parser parser(lexer);
+  Ast ast;
+  IdCache id_cache;
+  Parser parser(lexer, ast, id_cache);
   parser.parse();
 }
 
