@@ -6,6 +6,7 @@
 #include <limits>
 #include <unordered_map>
 #include <vector>
+#include <deque>
 
 using AstNodeIndex = std::uint32_t;
 static const AstNodeIndex UndefinedAstNodeIndex = std::numeric_limits<AstNodeIndex>::max();
@@ -68,9 +69,9 @@ struct AstNode {
 
   AstNode(Kind kind) : kind(kind) {}
   AstNode(const AstNode&) = delete;
-  AstNode(AstNode&&) = default;
+  AstNode(AstNode&&) = delete;
   AstNode& operator=(const AstNode&) = delete;
-  AstNode& operator=(AstNode&&) = default;
+  AstNode& operator=(AstNode&&) = delete;
 
   static bool is_type(AstNode::Kind kind) {
     switch (kind) {
@@ -189,7 +190,7 @@ public:
     return nodes.size() - 1;
   }
 private:
-  std::vector<AstNode> nodes;
+  std::deque<AstNode> nodes;
 };
 
 #endif  // AST_HPP
