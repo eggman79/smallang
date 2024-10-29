@@ -59,7 +59,7 @@ struct AstNode {
     AssignExpr, EqualExpr, GreatExpr, GreatOrEqualExpr, LessExpr, LessOrEqualExpr, 
     ParenthExpr, NegExpr,
     StructField, UnionField,
-    Function, Struct, Union,
+    Function, Struct, Union, BlockScope,
     VariableDeclStmt, BlockStmt, FunctionDeclStmt, StructDeclStmt, UnionDeclStmt, IfElseStmt, WhileStmt,
   };
   enum class StatementKind {};
@@ -278,6 +278,7 @@ struct AstNode {
     } struct_field;
 
     struct Scope {
+      AstNodeIndex outer_scope;
       IdIndex name;
       OrderedDict* dict;
 
@@ -292,6 +293,11 @@ struct AstNode {
     };
 
     Scope scope;
+
+    struct {
+      Scope scope;
+      AstNodeIndex block_stmt;
+    } block_scope;
 
     struct {
       Scope scope;
@@ -311,6 +317,7 @@ struct AstNode {
     } variable_decl_stmt;
 
     struct {
+      AstNodeIndex block_scope;
       std::vector<AstNodeIndex>* stmts;
 
       void add_stmt(AstNodeIndex node_idx) {

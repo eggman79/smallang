@@ -138,6 +138,15 @@ TEST(Ast, FunType) {
   }
 }
 
+TEST(Ast, Stmt) {
+  Ast ast;
+  IdCache id_cache;
+  auto scope_idx = ast.create(AstNode::Kind::BlockScope);
+  auto& scope_node = ast.get_node(scope_idx);
+  auto block_stmt_idx = ast.create(AstNode::Kind::BlockStmt);
+  auto& block_stmt = ast.get_node(block_stmt_idx);
+}
+
 TEST(Ast, Expession) {
   Ast ast;
   IdCache id_cache;
