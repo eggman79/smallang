@@ -6,6 +6,7 @@
 #include <limits>
 #include <utility>
 #include <vector>
+#include <algorithm>
 #include <unordered_map>
 
 using IdIndex = uint32_t;
@@ -18,6 +19,17 @@ public:
     uint32_t length;
   };
 
+  ~IdCache() {
+    std::for_each(
+      m_strings.begin(), 
+      m_strings.end(), 
+      [](String& s){ delete [] s.str;});
+  }
+
+  IdIndex get(const char* str) {
+    return get(str, ::strlen(str));
+  }
+
   IdIndex get(const char* str, uint32_t length) {
     StringPair sp{str, length};
     auto it = m_map.find(sp);
@@ -27,7 +39,7 @@ public:
       s[length] = '\0';
 
       const auto id_index = m_strings.size();
-      m_map[sp] = id_index;
+      m_map.emplace(StringPair{s, length}, id_index);
       m_strings.emplace_back(String{s, length});
       return id_index;
     }

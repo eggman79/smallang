@@ -7,8 +7,37 @@
 #include "ast.hpp"
 #include "id_cache.hpp"
 
+TEST(IdCache, Simple) {
+  IdCache id_cache;
+  auto index = id_cache.get("test", 4);
+  EXPECT_EQ(index, id_cache.get("test", 4));
+  EXPECT_STREQ(id_cache.get(index).str, "test");
+  EXPECT_EQ(id_cache.get(index).length, 4);
+}
+
 TEST(OrderedDict, Simple) {
   IdCache id_cache;
+  OrderedDict dict(id_cache);
+  Ast ast;
+  {
+    auto a_var_idx = ast.create(AstNode::Kind::LocalVariable);
+    auto& a_var_node = ast.get_node(a_var_idx);
+    a_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
+    a_var_node.node.local_variable.id = id_cache.get("a", 1);
+    dict.append("a", 1, a_var_idx);
+  }
+  {
+    auto b_var_idx = ast.create(AstNode::Kind::LocalVariable);
+    auto& b_var_node = ast.get_node(b_var_idx);
+    b_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
+    b_var_node.node.local_variable.id = id_cache.get("b", 1);
+    dict.append("b", 1, b_var_idx);
+  }
+  auto& nodes = dict.get_nodes();
+  ASSERT_EQ(nodes.size(), 2);
+  auto& a_node = ast.get_node(nodes[0]);
+  EXPECT_EQ(a_node.kind, AstNode::Kind::LocalVariable);
+  EXPECT_STREQ(id_cache.get(a_node.node.local_variable.id).str, "a");
 }
 
 TEST(Lexer, Simple) {
@@ -77,14 +106,6 @@ TEST(Ast, Expession) {
     EXPECT_STREQ(id_cache.get(left_node.node.string_literal.id_str).str, "string_test");
     EXPECT_STREQ(id_cache.get(right_node.node.string_literal.id_str).str, "cos");
   }
-}
-
-TEST(IdCache, Simple) {
-  IdCache id_cache;
-  auto index = id_cache.get("test", 4);
-  EXPECT_EQ(index, id_cache.get("test", 4));
-  EXPECT_STREQ(id_cache.get(index).str, "test");
-  EXPECT_EQ(id_cache.get(index).length, 4);
 }
 
 TEST(Parser, Simple) {

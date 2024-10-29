@@ -10,4 +10,6 @@ target_link_libraries(smalllang PRIVATE smalllang_lib)
 target_link_libraries(smalllang_test PRIVATE smalllang_lib GTest::GTest)
 target_include_directories(smalllang_test PRIVATE GTest::GTest)
 target_compile_features(smalllang PRIVATE cxx_std_23)
+add_compile_options(smalllang_test PRIVATE -fsanitize=address)
+add_link_options(smalllang_test PRIVATE -fsanitize=address)
 
