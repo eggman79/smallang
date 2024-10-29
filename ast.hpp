@@ -56,7 +56,8 @@ struct AstNode {
     FunType, FunTypeWithNamedParams, LocalVariable, GlobalVariable, StringLiteral, 
     I8Literal, I16Literal, I32Literal, U8Literal, U16Literal, U32Literal, 
     F32Literal, F64Literal,
-    Expression,
+    AssignExpr, EqualExpr, GreatExpr, GreatOrEqualExpr, LessExpr, LessOrEqualExpr, 
+    ParenthExpr, NegExpr,
     StructField, UnionField,
     Function, Struct, Union,
   };
@@ -70,6 +71,20 @@ struct AstNode {
   AstNode(AstNode&&) = delete;
   AstNode& operator=(const AstNode&) = delete;
   AstNode& operator=(AstNode&&) = delete;
+
+  static bool is_expr(AstNode::Kind kind) {
+    switch (kind) {
+      case AstNode::Kind::AssignExpr:
+      case AstNode::Kind::EqualExpr:
+      case AstNode::Kind::GreatExpr:
+      case AstNode::Kind::GreatOrEqualExpr:
+      case AstNode::Kind::LessExpr:
+      case AstNode::Kind::LessOrEqualExpr:
+        return true;
+      default:
+        return false;
+    }
+  }
 
   static bool is_scope(AstNode::Kind kind) {
     switch (kind) {
@@ -114,7 +129,6 @@ struct AstNode {
       case AstNode::Kind::U32Literal:
       case AstNode::Kind::F32Literal:
       case AstNode::Kind::F64Literal:
-      case AstNode::Kind::Expression:
       case AstNode::Kind::StructField:
       case AstNode::Kind::UnionField:
         return true;
@@ -163,10 +177,24 @@ struct AstNode {
       IdIndex name;
     } local_variable;
 
-    struct {
+    struct UnaryExpr {
+      AstNodeIndex expr;
+    };
+
+    UnaryExpr parenth_expr;
+    UnaryExpr neg_expr;
+
+    struct BinaryExpr {
       AstNodeIndex left;
       AstNodeIndex right;
-    } expression;
+    };
+
+    BinaryExpr assign_expr;
+    BinaryExpr equal_expr;
+    BinaryExpr great_expr;
+    BinaryExpr great__or_equal_expr;
+    BinaryExpr less_expr;
+    BinaryExpr less_or_equal_expr;
 
     struct StringLiteral {
       Value value;
@@ -274,7 +302,7 @@ public:
   }
 private:
   std::deque<AstNode> nodes;
-  std::vector<AstNodeIndex> removed;
+  std::deque<AstNodeIndex> removed;
 };
 
 #endif  // AST_HPP

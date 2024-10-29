@@ -141,21 +141,21 @@ TEST(Ast, FunType) {
 TEST(Ast, Expession) {
   Ast ast;
   IdCache id_cache;
-  auto& expr_node = ast.get_node(ast.create(AstNode::Kind::Expression));
+  auto& expr_node = ast.get_node(ast.create(AstNode::Kind::AssignExpr));
 
   auto left_idx = ast.create(AstNode::Kind::StringLiteral);
   auto& left_node = ast.get_node(left_idx);
   left_node.node.string_literal.string = id_cache.get("string_test", strlen("string_test"));
-  expr_node.node.expression.left = left_idx;
+  expr_node.node.assign_expr.left = left_idx;
 
   auto right_idx = ast.create(AstNode::Kind::StringLiteral);
   auto& right_node = ast.get_node(right_idx);
   right_node.node.string_literal.string = id_cache.get("cos", 3);
-  expr_node.node.expression.right = right_idx;
+  expr_node.node.assign_expr.right = right_idx;
 
   {
-    auto& left_node = ast.get_node(expr_node.node.expression.left);
-    auto& right_node = ast.get_node(expr_node.node.expression.right);
+    auto& left_node = ast.get_node(expr_node.node.assign_expr.left);
+    auto& right_node = ast.get_node(expr_node.node.assign_expr.right);
 
     EXPECT_STREQ(id_cache.get(left_node.node.string_literal.string).str, "string_test");
     EXPECT_STREQ(id_cache.get(right_node.node.string_literal.string).str, "cos");
