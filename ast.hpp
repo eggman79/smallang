@@ -58,7 +58,7 @@ struct AstNode {
     F32Literal, F64Literal,
     Expression,
     StructField, UnionField,
-    Function, Struct, Union, Class,
+    Function, Struct, Union,
   };
   enum class StatementKind {};
 
@@ -73,7 +73,6 @@ struct AstNode {
       case AstNode::Kind::Function:
       case AstNode::Kind::Struct:
       case AstNode::Kind::Union:
-      case AstNode::Kind::Class:
         return true;
       default:
         return false;
