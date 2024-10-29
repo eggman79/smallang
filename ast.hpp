@@ -13,16 +13,11 @@ static const AstNodeIndex UndefinedAstNodeIndex = std::numeric_limits<AstNodeInd
 
 class OrderedDict {
 public:
-  OrderedDict(IdCache& id_cache) : m_id_cache(id_cache) {}
+  OrderedDict() = default;
   OrderedDict(const OrderedDict&) = delete;
   OrderedDict(OrderedDict&&) = delete;
   OrderedDict& operator=(const OrderedDict&) = delete;
   OrderedDict& operator=(OrderedDict&&) = delete;
-
-  void append(const char* key, uint32_t key_length, AstNodeIndex node_index) {
-    auto idx_key = m_id_cache.get(key, key_length);
-    append(idx_key, node_index);
-  }
 
   void append(IdIndex name, AstNodeIndex node_index) {
     auto it = m_map.find(name);
@@ -48,7 +43,6 @@ public:
   const std::vector<AstNodeIndex>& get_nodes() const { return m_nodes;}
 
 private:
-  IdCache& m_id_cache;
   using Map = std::unordered_map<IdIndex, AstNodeIndex> ;
   Map m_map;
   std::vector<AstNodeIndex> m_nodes;
@@ -215,6 +209,10 @@ struct AstNode {
     struct Scope {
       IdIndex name;
       OrderedDict* dict;
+      void add_node(AstNodeIndex node) {
+        if (!dict) dict = new OrderedDict;
+        dict->append(node);
+      }
     };
 
     struct {

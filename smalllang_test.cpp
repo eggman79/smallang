@@ -16,22 +16,22 @@ TEST(IdCache, Simple) {
 }
 
 TEST(OrderedDict, Simple) {
+  OrderedDict dict;
   IdCache id_cache;
-  OrderedDict dict(id_cache);
   Ast ast;
   {
     auto a_var_idx = ast.create(AstNode::Kind::LocalVariable);
     auto& a_var_node = ast.get_node(a_var_idx);
     a_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
     a_var_node.node.local_variable.id = id_cache.get("a", 1);
-    dict.append("a", 1, a_var_idx);
+    dict.append(id_cache.get("a", 1), a_var_idx);
   }
   {
     auto b_var_idx = ast.create(AstNode::Kind::LocalVariable);
     auto& b_var_node = ast.get_node(b_var_idx);
     b_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
     b_var_node.node.local_variable.id = id_cache.get("b", 1);
-    dict.append("b", 1, b_var_idx);
+    dict.append(id_cache.get("b", 1), b_var_idx);
   }
   auto& nodes = dict.get_nodes();
   ASSERT_EQ(nodes.size(), 2);
@@ -56,6 +56,18 @@ TEST(Ast, FunTypeWithNamedParams) {
   fun_type.fun_type.add_param_type(ast.create(AstNode::Kind::U32Type));
   fun_type.add_name(id_cache.get("b"));
   fun_type.fun_type.return_type = ast.create(AstNode::Kind::F32Type);
+
+  {
+    auto& node = ast.get_node(0);
+    ASSERT_EQ(node.kind, AstNode::Kind::FunTypeWithNamedParams);
+    ASSERT_NE(node.node.fun_type.param_types, nullptr);
+    auto& param1 = ast.get_node(node.node.fun_type.param_types->operator[](0));
+    auto& param2 = ast.get_node(node.node.fun_type.param_types->operator[](1));
+    ASSERT_EQ(param1.kind, AstNode::Kind::I32Type);
+    ASSERT_EQ(param2.kind, AstNode::Kind::U32Type);
+    auto& return_type = ast.get_node(node.node.fun_type.return_type);
+    ASSERT_EQ(return_type.kind, AstNode::Kind::F32Type);
+  }
 }
 
 TEST(Lexer, Simple) {
