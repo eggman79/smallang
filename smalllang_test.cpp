@@ -7,6 +7,10 @@
 #include "ast.hpp"
 #include "id_cache.hpp"
 
+TEST(OrderedDict, Simple) {
+  IdCache id_cache;
+}
+
 TEST(Lexer, Simple) {
   std::istringstream in("fun struct union \"test\"");
   Lexer::Tokens tokens;
@@ -26,17 +30,53 @@ TEST(Lexer, Simple) {
   ASSERT_EQ(eof1_token, eof2_token);
 }
 
-TEST(Ast, Simple) {
+TEST(Ast, FunType) {
   Ast ast;
-  auto ast_id = ast.create(AstNode::Kind::Value);
-  auto& ast_node = ast.get_node(ast_id);
   IdCache id_cache;
-  ast_node.node.value.value_kind = AstNode::ValueKind::LocalVariable;
-  ast_node.node.local_variable.id = id_cache.get("a", 1);
+  auto i32_type_idx = ast.create(AstNode::Kind::I32Type);
+  auto idx = ast.create(AstNode::Kind::FunType);
+  auto& node = ast.get_node(idx);
+  node.node.fun_type.name = id_cache.get("funtype", 7);
+  node.node.fun_type.return_type = i32_type_idx;
+  node.node.fun_type.param_types = new std::vector<AstNodeIndex>();
+  node.node.fun_type.param_types->emplace_back(i32_type_idx);
+  node.node.fun_type.param_types->emplace_back(i32_type_idx);
+  {
+    auto& node = ast.get_node(idx);
+    EXPECT_STREQ(id_cache.get(node.node.fun_type.name).str, "funtype");
+    auto& return_type_node = ast.get_node(node.node.fun_type.return_type);
+    EXPECT_EQ(return_type_node.kind, AstNode::Kind::I32Type);
+    ASSERT_TRUE(node.node.fun_type.param_types != nullptr);
+    ASSERT_EQ(node.node.fun_type.param_types->size(), 2);
+    auto& param1_node = ast.get_node((*node.node.fun_type.param_types)[0]);
+    auto& param2_node = ast.get_node((*node.node.fun_type.param_types)[1]);
+    EXPECT_EQ(param1_node.kind, AstNode::Kind::I32Type);
+    EXPECT_EQ(param2_node.kind, AstNode::Kind::I32Type);
+  }
+}
 
-  EXPECT_EQ(ast_node.kind, AstNode::Kind::Value);
-  EXPECT_EQ(ast_node.node.value.value_kind, AstNode::ValueKind::LocalVariable);
+TEST(Ast, Expession) {
+  Ast ast;
+  IdCache id_cache;
+  auto& expr_node = ast.get_node(ast.create(AstNode::Kind::Expression));
 
+  auto left_idx = ast.create(AstNode::Kind::StringLiteral);
+  auto& left_node = ast.get_node(left_idx);
+  left_node.node.string_literal.id_str = id_cache.get("string_test", strlen("string_test"));
+  expr_node.node.expression.left = left_idx;
+
+  auto right_idx = ast.create(AstNode::Kind::StringLiteral);
+  auto& right_node = ast.get_node(right_idx);
+  right_node.node.string_literal.id_str = id_cache.get("cos", 3);
+  expr_node.node.expression.right = right_idx;
+
+  {
+    auto& left_node = ast.get_node(expr_node.node.expression.left);
+    auto& right_node = ast.get_node(expr_node.node.expression.right);
+
+    EXPECT_STREQ(id_cache.get(left_node.node.string_literal.id_str).str, "string_test");
+    EXPECT_STREQ(id_cache.get(right_node.node.string_literal.id_str).str, "cos");
+  }
 }
 
 TEST(IdCache, Simple) {

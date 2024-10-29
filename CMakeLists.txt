@@ -3,7 +3,7 @@ project(smalllang)
 
 find_package(GTest REQUIRED)
 
-add_library(smalllang_lib STATIC ast.hpp token.cpp token.hpp lexer.hpp parser.cpp parser.hpp id_cache.hpp)
+add_library(smalllang_lib STATIC ast.hpp token.cpp token.hpp lexer.hpp parser.cpp parser.hpp id_cache.hpp id_cache.cpp)
 add_executable(smalllang smalllang.cpp)
 add_executable(smalllang_test smalllang_test.cpp)
 target_link_libraries(smalllang PRIVATE smalllang_lib)

@@ -3,11 +3,13 @@
 
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <utility>
 #include <vector>
 #include <unordered_map>
 
 using IdIndex = uint32_t;
+static const IdIndex UndefinedIdIndex = std::numeric_limits<IdIndex>::max();
 
 class IdCache {
 public:
