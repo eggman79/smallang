@@ -50,7 +50,7 @@ private:
 
 struct AstNode {
   enum class Kind {
-    None, Type, Value, Statement, 
+    None, Type, Value, 
     I8Type, I16Type, I32Type, U8Type, U16Type, U32Type, F32Type, F64Type, 
     StructType, UnionType,
     FunType, FunTypeWithNamedParams, LocalVariable, GlobalVariable, StringLiteral, 
@@ -60,6 +60,7 @@ struct AstNode {
     ParenthExpr, NegExpr,
     StructField, UnionField,
     Function, Struct, Union,
+    VariableDeclStmt, BlockStmt, FunctionDeclStmt, StructDeclStmt, UnionDeclStmt, IfElseStmt, WhileStmt,
   };
   enum class StatementKind {};
 
@@ -71,6 +72,25 @@ struct AstNode {
   AstNode(AstNode&&) = delete;
   AstNode& operator=(const AstNode&) = delete;
   AstNode& operator=(AstNode&&) = delete;
+
+  bool is_stmt() const { return is_stmt(kind); }
+
+  static bool is_stmt(AstNode::Kind kind) {
+    switch (kind) {
+      case AstNode::Kind::VariableDeclStmt:
+      case AstNode::Kind::BlockStmt:
+      case AstNode::Kind::FunctionDeclStmt:
+      case AstNode::Kind::StructDeclStmt:
+      case AstNode::Kind::UnionDeclStmt:
+      case AstNode::Kind::IfElseStmt:
+      case AstNode::Kind::WhileStmt:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  bool is_expr() const { return is_expr(kind); }
 
   static bool is_expr(AstNode::Kind kind) {
     switch (kind) {
@@ -86,6 +106,8 @@ struct AstNode {
     }
   }
 
+  bool is_scope() const { return is_scope(kind); }
+
   static bool is_scope(AstNode::Kind kind) {
     switch (kind) {
       case AstNode::Kind::Function:
@@ -96,6 +118,8 @@ struct AstNode {
         return false;
     }
   }
+
+  bool is_type() const { return is_type(kind); }
 
   static bool is_type(AstNode::Kind kind) {
     switch (kind) {
@@ -115,6 +139,8 @@ struct AstNode {
         return false;
     }
   } 
+
+  bool is_value() const { return is_value(kind); }
 
   static bool is_value(AstNode::Kind kind) {
     switch (kind) {
@@ -150,6 +176,9 @@ struct AstNode {
       case AstNode::Kind::Struct:
       case AstNode::Kind::Union:
         delete node.scope.dict;
+        break;
+      case AstNode::Kind::BlockStmt:
+        delete node.block_stmt.stmts;
         break;
       default:
         break;
@@ -275,6 +304,32 @@ struct AstNode {
 
     StructOrUnion struc;
     StructOrUnion unio;
+
+    struct {
+      AstNodeIndex variable;
+      AstNodeIndex init_expr;
+    } variable_decl_stmt;
+
+    struct {
+      std::vector<AstNodeIndex>* stmts;
+
+      void add_stmt(AstNodeIndex node_idx) {
+        if (!stmts) stmts = new std::vector<AstNodeIndex>();
+        stmts->emplace_back(node_idx);
+      }
+    } block_stmt;
+
+    struct {
+      AstNodeIndex expr;
+      AstNodeIndex stmt;
+      AstNodeIndex else_stmt;
+    } if_else_stmt;
+
+    struct {
+      AstNodeIndex expr;
+      AstNodeIndex stmt;
+    } while_stmt;
+
   };
   Node node;
 };
