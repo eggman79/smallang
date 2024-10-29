@@ -344,10 +344,6 @@ struct AstNode {
 
 class Ast {
 public:
-  AstNode& get_node(AstNodeIndex index) {
-    return nodes[index];
-  }
-
   AstNodeIndex create(AstNode::Kind kind) {
     if (removed.empty()) {
       nodes.emplace_back(kind);
@@ -362,6 +358,14 @@ public:
   void remove(AstNodeIndex index) {
     nodes[index].clean();
     removed.emplace_back(index);
+  }
+
+  const AstNode& operator[](AstNodeIndex index) const {
+    return nodes[index];
+  }
+
+  AstNode& operator[](AstNodeIndex index) {
+    return nodes[index];
   }
 private:
   std::deque<AstNode> nodes;

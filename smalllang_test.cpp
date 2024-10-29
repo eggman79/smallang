@@ -19,16 +19,16 @@ TEST(Ast, Scope) {
   Ast ast;
   IdCache id_cache;
   auto struct_idx = ast.create(AstNode::Kind::Struct);
-  auto& struct_node = ast.get_node(struct_idx);
+  auto& struct_node = ast[struct_idx];
   auto a_field_idx = ast.create(AstNode::Kind::StructField);
-  auto& a_field = ast.get_node(a_field_idx);
+  auto& a_field = ast[a_field_idx];
   a_field.node.struct_field.name = id_cache.get("a_field");
   a_field.node.struct_field.value.type = ast.create(AstNode::Kind::I32Type);
   struct_node.node.struc.scope.add_node(a_field_idx, a_field.node.struct_field.name);
   {
-    auto a_field_idx = ast.get_node(struct_idx).node.scope.dict->find(id_cache.get("a_field"));
+    auto a_field_idx = ast[struct_idx].node.scope.dict->find(id_cache.get("a_field"));
     ASSERT_FALSE(a_field_idx == UndefinedAstNodeIndex);
-    ASSERT_STREQ(id_cache.get(ast.get_node(a_field_idx).node.struct_field.name).str, "a_field");
+    ASSERT_STREQ(id_cache.get(ast[a_field_idx].node.struct_field.name).str, "a_field");
   }
 }
 
@@ -38,14 +38,14 @@ TEST(OrderedDict, Simple) {
   Ast ast;
   {
     auto a_var_idx = ast.create(AstNode::Kind::LocalVariable);
-    auto& a_var_node = ast.get_node(a_var_idx);
+    auto& a_var_node = ast[a_var_idx];
     a_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
     a_var_node.node.local_variable.name = id_cache.get("a", 1);
     dict.append(id_cache.get("a", 1), a_var_idx);
   }
   {
     auto b_var_idx = ast.create(AstNode::Kind::LocalVariable);
-    auto& b_var_node = ast.get_node(b_var_idx);
+    auto& b_var_node = ast[b_var_idx];
     b_var_node.node.local_variable.value.type = ast.create(AstNode::Kind::I32Type);
     b_var_node.node.local_variable.name = id_cache.get("b", 1);
     dict.append(id_cache.get("b", 1), b_var_idx);
@@ -53,11 +53,11 @@ TEST(OrderedDict, Simple) {
   auto& nodes = dict.get_nodes();
   ASSERT_EQ(nodes.size(), 2);
 
-  auto& a_node = ast.get_node(nodes[0]);
+  auto& a_node = ast[nodes[0]];
   EXPECT_EQ(a_node.kind, AstNode::Kind::LocalVariable);
   EXPECT_STREQ(id_cache.get(a_node.node.local_variable.name).str, "a");
   
-  auto& b_node = ast.get_node(nodes[1]);
+  auto& b_node = ast[nodes[1]];
   EXPECT_EQ(b_node.kind, AstNode::Kind::LocalVariable);
   EXPECT_STREQ(id_cache.get(b_node.node.local_variable.name).str, "b");
 }
@@ -66,7 +66,7 @@ TEST(Ast, FunTypeWithNamedParams) {
   Ast ast;
   IdCache id_cache;
   auto f_idx = ast.create(AstNode::Kind::FunTypeWithNamedParams);
-  auto& f_node = ast.get_node(f_idx);
+  auto& f_node = ast[f_idx];
   auto& fun_type = f_node.node.fun_type_with_named_params;
   fun_type.fun_type.add_param_type(ast.create(AstNode::Kind::I32Type));
   fun_type.add_name(id_cache.get("a"));
@@ -75,14 +75,14 @@ TEST(Ast, FunTypeWithNamedParams) {
   fun_type.fun_type.return_type = ast.create(AstNode::Kind::F32Type);
 
   {
-    auto& node = ast.get_node(0);
+    auto& node = ast[0];
     ASSERT_EQ(node.kind, AstNode::Kind::FunTypeWithNamedParams);
     ASSERT_NE(node.node.fun_type.param_types, nullptr);
-    auto& param1 = ast.get_node(node.node.fun_type.param_types->operator[](0));
-    auto& param2 = ast.get_node(node.node.fun_type.param_types->operator[](1));
+    auto& param1 = ast[node.node.fun_type.param_types->operator[](0)];
+    auto& param2 = ast[node.node.fun_type.param_types->operator[](1)];
     ASSERT_EQ(param1.kind, AstNode::Kind::I32Type);
     ASSERT_EQ(param2.kind, AstNode::Kind::U32Type);
-    auto& return_type = ast.get_node(node.node.fun_type.return_type);
+    auto& return_type = ast[node.node.fun_type.return_type];
     ASSERT_EQ(return_type.kind, AstNode::Kind::F32Type);
   }
 }
@@ -91,7 +91,7 @@ TEST(Ast, Struct) {
   Ast ast;
   IdCache id_cache;
   auto struc_idx = ast.create(AstNode::Kind::Struct);
-  auto& struc_node = ast.get_node(struc_idx);
+  auto& struc_node = ast[struc_idx];
 }
 
 TEST(Lexer, Simple) {
@@ -118,21 +118,21 @@ TEST(Ast, FunType) {
   IdCache id_cache;
   auto i32_type_idx = ast.create(AstNode::Kind::I32Type);
   auto idx = ast.create(AstNode::Kind::FunType);
-  auto& node = ast.get_node(idx);
+  auto& node = ast[idx];
   node.node.fun_type.name = id_cache.get("funtype", 7);
   node.node.fun_type.return_type = i32_type_idx;
   node.node.fun_type.param_types = new std::vector<AstNodeIndex>();
   node.node.fun_type.param_types->emplace_back(i32_type_idx);
   node.node.fun_type.param_types->emplace_back(i32_type_idx);
   {
-    auto& node = ast.get_node(idx);
+    auto& node = ast[idx];
     EXPECT_STREQ(id_cache.get(node.node.fun_type.name).str, "funtype");
-    auto& return_type_node = ast.get_node(node.node.fun_type.return_type);
+    auto& return_type_node = ast[node.node.fun_type.return_type];
     EXPECT_EQ(return_type_node.kind, AstNode::Kind::I32Type);
     ASSERT_TRUE(node.node.fun_type.param_types != nullptr);
     ASSERT_EQ(node.node.fun_type.param_types->size(), 2);
-    auto& param1_node = ast.get_node((*node.node.fun_type.param_types)[0]);
-    auto& param2_node = ast.get_node((*node.node.fun_type.param_types)[1]);
+    auto& param1_node = ast[(*node.node.fun_type.param_types)[0]];
+    auto& param2_node = ast[(*node.node.fun_type.param_types)[1]];
     EXPECT_EQ(param1_node.kind, AstNode::Kind::I32Type);
     EXPECT_EQ(param2_node.kind, AstNode::Kind::I32Type);
   }
@@ -142,25 +142,25 @@ TEST(Ast, Stmt) {
   Ast ast;
   IdCache id_cache;
   auto scope_idx = ast.create(AstNode::Kind::BlockScope);
-  auto& scope_node = ast.get_node(scope_idx);
+  auto& scope_node = ast[scope_idx];
   auto block_stmt_idx = ast.create(AstNode::Kind::BlockStmt);
-  auto& block_stmt = ast.get_node(block_stmt_idx);
+  auto& block_stmt = ast[block_stmt_idx];
   scope_node.node.block_scope.block_stmt = block_stmt_idx;
   block_stmt.node.block_stmt.block_scope = scope_idx;
 
   auto i32_type_idx = ast.create(AstNode::Kind::I32Type);
   auto local_var_idx = ast.create(AstNode::Kind::LocalVariable);
-  auto& local_var = ast.get_node(local_var_idx);
+  auto& local_var = ast[local_var_idx];
   local_var.node.local_variable.name = id_cache.get("a");
   local_var.node.local_variable.value.type = i32_type_idx;
 
   auto init_idx = ast.create(AstNode::Kind::I32Literal);
-  auto& init_node = ast.get_node(init_idx);
+  auto& init_node = ast[init_idx];
   init_node.node.i32_literal.value.type = i32_type_idx;
   init_node.node.i32_literal.literal_value = 100;
 
   auto var_decl_stmt_idx = ast.create(AstNode::Kind::VariableDeclStmt);
-  auto& var_decl_stmt = ast.get_node(var_decl_stmt_idx);
+  auto& var_decl_stmt = ast[var_decl_stmt_idx];
   var_decl_stmt.node.variable_decl_stmt.variable = local_var_idx;
   var_decl_stmt.node.variable_decl_stmt.init_expr = init_idx;
 
@@ -170,21 +170,21 @@ TEST(Ast, Stmt) {
 TEST(Ast, Expession) {
   Ast ast;
   IdCache id_cache;
-  auto& expr_node = ast.get_node(ast.create(AstNode::Kind::AssignExpr));
+  auto& expr_node = ast[ast.create(AstNode::Kind::AssignExpr)];
 
   auto left_idx = ast.create(AstNode::Kind::StringLiteral);
-  auto& left_node = ast.get_node(left_idx);
+  auto& left_node = ast[left_idx];
   left_node.node.string_literal.string = id_cache.get("string_test", strlen("string_test"));
   expr_node.node.assign_expr.left = left_idx;
 
   auto right_idx = ast.create(AstNode::Kind::StringLiteral);
-  auto& right_node = ast.get_node(right_idx);
+  auto& right_node = ast[right_idx];
   right_node.node.string_literal.string = id_cache.get("cos", 3);
   expr_node.node.assign_expr.right = right_idx;
 
   {
-    auto& left_node = ast.get_node(expr_node.node.assign_expr.left);
-    auto& right_node = ast.get_node(expr_node.node.assign_expr.right);
+    auto& left_node = ast[expr_node.node.assign_expr.left];
+    auto& right_node = ast[expr_node.node.assign_expr.right];
 
     EXPECT_STREQ(id_cache.get(left_node.node.string_literal.string).str, "string_test");
     EXPECT_STREQ(id_cache.get(right_node.node.string_literal.string).str, "cos");
