@@ -209,9 +209,15 @@ struct AstNode {
     struct Scope {
       IdIndex name;
       OrderedDict* dict;
-      void add_node(AstNodeIndex node) {
+
+      void add_named_node(IdIndex id, AstNodeIndex node_idx) {
         if (!dict) dict = new OrderedDict;
-        dict->append(node);
+        dict->append(id, node_idx);
+      }
+
+      void add_node(AstNodeIndex node_idx) {
+        if (!dict) dict = new OrderedDict;
+        dict->append(node_idx);
       }
     };
 
