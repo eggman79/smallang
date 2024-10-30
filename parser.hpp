@@ -8,7 +8,8 @@ class IdCache;
 
 class Parser {
 public:
-  Parser(Lexer& lexer, Ast& ast, IdCache& id_cache) : m_lexer(lexer), m_ast(ast), m_id_cache(id_cache) {}
+  Parser(Lexer& lexer, Ast& ast, IdCache& id_cache) : 
+    m_lexer(lexer), m_ast(ast), m_id_cache(id_cache) {}
 
   void parse();
 private:

@@ -64,6 +64,15 @@ public:
         case '=': push_token_kind(Token::Kind::Assign); break;
         case '>': push_token_kind(Token::Kind::Great); break;
         case '<': push_token_kind(Token::Kind::Less); break;
+        case '\'': {
+          const auto chr = next_char();
+          if (next_char() != '\'') {
+            //error
+          } else {
+
+          }
+          break;
+        }
         case '"': {
           next_char();
           while (last_char() != '"') {

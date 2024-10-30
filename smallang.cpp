@@ -2,8 +2,10 @@
 #include <fstream>
 #include <iostream>
 #include "lexer.hpp"
+#include "ast.hpp"
 
 int main(int argc, char* argv[]) {
+  std::cout << sizeof(AstNode) << std::endl;
   if (argc <= 1) {
     std::cerr << "no input file" << std::endl;
     return -1;

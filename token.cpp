@@ -2,6 +2,9 @@
 
 const Token::Keywords Token::s_keywords = {
   {"struct", Token::Kind::Struct}, 
+  {"class", Token::Kind::Class}, 
+  {"var", Token::Kind::Var}, 
+  {"val", Token::Kind::Val}, 
   {"union", Token::Kind::Union}, 
   {"fun", Token::Kind::Fun}, 
   {"return", Token::Kind::Return}, 

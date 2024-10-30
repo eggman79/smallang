@@ -3,7 +3,7 @@ project(smallang)
 
 find_package(GTest REQUIRED)
 
-add_library(smallang_lib STATIC ast.hpp token.cpp token.hpp lexer.hpp parser.cpp parser.hpp id_cache.hpp id_cache.cpp)
+add_library(smallang_lib STATIC ast.hpp token.cpp token.hpp lexer.hpp parser.cpp parser.hpp id_cache.hpp) 
 add_executable(smallang smallang.cpp)
 add_executable(smallang_test smallang_test.cpp)
 target_link_libraries(smallang PRIVATE smallang_lib)
@@ -13,3 +13,5 @@ target_compile_features(smallang PRIVATE cxx_std_23)
 add_compile_options(smallang_test PRIVATE -fsanitize=address)
 add_link_options(smallang_test PRIVATE -fsanitize=address)
 
+enable_testing()
+add_test(test smallang_test)

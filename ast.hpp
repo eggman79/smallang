@@ -53,13 +53,13 @@ struct AstNode {
     None, Type, Value, 
     I8Type, I16Type, I32Type, U8Type, U16Type, U32Type, F32Type, F64Type, 
     StructType, UnionType,
-    FunType, FunTypeWithNamedParams, LocalVariable, GlobalVariable, StringLiteral, 
+    FunType, FunTypeWithNamedParams, LocalVariable, GlobalVariable, StringLiteral, CharLiteral,
     I8Literal, I16Literal, I32Literal, U8Literal, U16Literal, U32Literal, 
     F32Literal, F64Literal,
     AssignExpr, EqualExpr, GreatExpr, GreatOrEqualExpr, LessExpr, LessOrEqualExpr, 
     ParenthExpr, NegExpr,
     StructField, UnionField,
-    Function, Struct, Union, BlockScope,
+    Function, Struct, Union, BlockScope, GlobalScope,
     VariableDeclStmt, BlockStmt, FunctionDeclStmt, StructDeclStmt, UnionDeclStmt, IfElseStmt, WhileStmt, ExprStmt, ReturnStmt,
   };
   enum class StatementKind {};
@@ -115,6 +115,8 @@ struct AstNode {
       case AstNode::Kind::Function:
       case AstNode::Kind::Struct:
       case AstNode::Kind::Union:
+      case AstNode::Kind::BlockScope:
+      case AstNode::Kind::GlobalScope:
         return true;
       default:
         return false;
@@ -149,6 +151,7 @@ struct AstNode {
       case AstNode::Kind::LocalVariable:
       case AstNode::Kind::GlobalVariable:
       case AstNode::Kind::StringLiteral:
+      case AstNode::Kind::CharLiteral:
       case AstNode::Kind::I8Literal:
       case AstNode::Kind::I16Literal:
       case AstNode::Kind::I32Literal:
@@ -232,6 +235,11 @@ struct AstNode {
       IdIndex string;
     };
 
+    struct CharLiteral {
+      Value value;
+      char chr;
+    };
+
     template <typename Type>
     struct NumberLiteral {
       Value value;
@@ -239,6 +247,7 @@ struct AstNode {
     };
 
     StringLiteral string_literal;
+    CharLiteral char_literal;
     NumberLiteral<int8_t> i8_literal;
     NumberLiteral<int16_t> i16_literal;
     NumberLiteral<int32_t> i32_literal;
@@ -295,6 +304,10 @@ struct AstNode {
     };
 
     Scope scope;
+
+    struct {
+      Scope scope;
+    } global_scope;
 
     struct {
       Scope scope;

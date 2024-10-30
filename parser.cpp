@@ -18,7 +18,8 @@ void Parser::parse() {
 
   m_lexer.next();
 
-  while (m_lexer.last().get_kind() != Token::Kind::RightBrace && m_lexer.last().get_kind() != Token::Kind::Eof) {
+  while (m_lexer.last().get_kind() != Token::Kind::RightBrace 
+    && m_lexer.last().get_kind() != Token::Kind::Eof) {
     m_lexer.next();
   }
 }
