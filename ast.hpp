@@ -173,17 +173,17 @@ struct AstNode {
   void clean() {
     switch (kind) {
       case AstNode::Kind::FunTypeWithNamedParams:
-        delete node.fun_type_with_named_params.names;
+        delete fun_type_with_named_params.names;
       case AstNode::Kind::FunType:
-        delete node.fun_type.param_types;
+        delete fun_type.param_types;
         break;
       case AstNode::Kind::Function:
       case AstNode::Kind::Struct:
       case AstNode::Kind::Union:
-        delete node.scope.dict;
+        delete scope.dict;
         break;
       case AstNode::Kind::BlockStmt:
-        delete node.block_stmt.stmts;
+        delete block_stmt.stmts;
         break;
       default:
         break;
@@ -193,102 +193,56 @@ struct AstNode {
   }
 
   Kind kind;
+  struct Value {
+    AstNodeIndex type; 
+  };
 
-  union Node {
-    struct Value {
-      AstNodeIndex type; 
-    };
+  struct UnaryExpr {
+    AstNodeIndex expr;
+  };
 
+
+  struct StringLiteral {
     Value value;
+    IdIndex string;
+  };
 
-    struct {
-      Value value;
-      IdIndex name;
-    } global_variable;
+  struct CharLiteral {
+    Value value;
+    char chr;
+  };
 
-    struct {
-      Value value;
-      IdIndex name;
-    } local_variable;
+  template <typename Type>
+  struct NumberLiteral {
+    Value value;
+    Type literal_value;
+  };
 
-    struct UnaryExpr {
-      AstNodeIndex expr;
-    };
+  struct BinaryExpr {
+    AstNodeIndex left;
+    AstNodeIndex right;
+  };
 
-    UnaryExpr parenth_expr;
-    UnaryExpr neg_expr;
+  struct FunType {
+    AstNodeIndex return_type;
+    std::vector<AstNodeIndex>* param_types;
+    IdIndex name;
 
-    struct BinaryExpr {
-      AstNodeIndex left;
-      AstNodeIndex right;
-    };
-
-    BinaryExpr assign_expr;
-    BinaryExpr equal_expr;
-    BinaryExpr great_expr;
-    BinaryExpr great__or_equal_expr;
-    BinaryExpr less_expr;
-    BinaryExpr less_or_equal_expr;
-
-    struct StringLiteral {
-      Value value;
-      IdIndex string;
-    };
-
-    struct CharLiteral {
-      Value value;
-      char chr;
-    };
-
-    template <typename Type>
-    struct NumberLiteral {
-      Value value;
-      Type literal_value;
-    };
-
-    StringLiteral string_literal;
-    CharLiteral char_literal;
-    NumberLiteral<int8_t> i8_literal;
-    NumberLiteral<int16_t> i16_literal;
-    NumberLiteral<int32_t> i32_literal;
-    NumberLiteral<int64_t> i64_literal;
-    NumberLiteral<uint8_t> u8_literal;
-    NumberLiteral<uint16_t> u16_literal;
-    NumberLiteral<uint32_t> u32_literal;
-
-    struct FunType {
-      AstNodeIndex return_type;
-      std::vector<AstNodeIndex>* param_types;
-      IdIndex name;
-
-      void add_param_type(AstNodeIndex type) {
-        if (!param_types) param_types = new std::vector<AstNodeIndex>;
-        param_types->emplace_back(type);
-      }
-    };
-    struct FunTypeWithNamedParams {
-      FunType fun_type;
-      std::vector<IdIndex>* names;
-
-      void add_name(IdIndex id) {
-        if (!names) names = new std::vector<IdIndex>;
-        names->emplace_back(id);
-      }
-    };
+    void add_param_type(AstNodeIndex type) {
+      if (!param_types) param_types = new std::vector<AstNodeIndex>;
+      param_types->emplace_back(type);
+    }
+  };
+  struct FunTypeWithNamedParams {
     FunType fun_type;
-    FunTypeWithNamedParams fun_type_with_named_params;
+    std::vector<IdIndex>* names;
 
-    struct {
-      AstNodeIndex struct_scope;
-    } struct_type;
-
-    struct {
-      Value value;
-      IdIndex name;
-      uint32_t offset;
-    } struct_field;
-
-    struct Scope {
+    void add_name(IdIndex id) {
+      if (!names) names = new std::vector<IdIndex>;
+      names->emplace_back(id);
+    }
+  };
+struct Scope {
       AstNodeIndex outer_scope;
       IdIndex name;
       OrderedDict* dict;
@@ -302,7 +256,57 @@ struct AstNode {
         }
       }
     };
+struct StructOrUnion {
+      Scope scope;
+    };
 
+
+  union {
+    Value value;
+
+    struct {
+      Value value;
+      IdIndex name;
+    } global_variable;
+
+    struct {
+      Value value;
+      IdIndex name;
+    } local_variable;
+
+    UnaryExpr parenth_expr;
+    UnaryExpr neg_expr;
+
+    BinaryExpr assign_expr;
+    BinaryExpr equal_expr;
+    BinaryExpr great_expr;
+    BinaryExpr great__or_equal_expr;
+    BinaryExpr less_expr;
+    BinaryExpr less_or_equal_expr;
+    StringLiteral string_literal;
+    CharLiteral char_literal;
+    NumberLiteral<int8_t> i8_literal;
+    NumberLiteral<int16_t> i16_literal;
+    NumberLiteral<int32_t> i32_literal;
+    NumberLiteral<int64_t> i64_literal;
+    NumberLiteral<uint8_t> u8_literal;
+    NumberLiteral<uint16_t> u16_literal;
+    NumberLiteral<uint32_t> u32_literal;
+
+    FunType fun_type;
+    FunTypeWithNamedParams fun_type_with_named_params;
+
+    struct {
+      AstNodeIndex struct_scope;
+    } struct_type;
+
+    struct {
+      Value value;
+      IdIndex name;
+      uint32_t offset;
+    } struct_field;
+
+    
     Scope scope;
 
     struct {
@@ -319,11 +323,7 @@ struct AstNode {
       AstNodeIndex function_type_with_named_params;
     } function;
 
-    struct StructOrUnion {
-      Scope scope;
-    };
-
-    StructOrUnion struc;
+        StructOrUnion struc;
     StructOrUnion unio;
 
     struct {
@@ -357,7 +357,6 @@ struct AstNode {
     } while_stmt;
 
   };
-  Node node;
 };
 
 class Ast {
