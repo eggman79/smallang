@@ -1,52 +1,14 @@
 #ifndef AST_HPP
 #define AST_HPP
 
-#include "id_cache.hpp"
+#include <cstring>
 #include <cstdint>
-#include <limits>
-#include <unordered_map>
 #include <vector>
 #include <deque>
 
-using AstNodeIndex = std::uint32_t;
-static const AstNodeIndex UndefinedAstNodeIndex = std::numeric_limits<AstNodeIndex>::max();
-
-class OrderedDict {
-public:
-  OrderedDict() = default;
-  OrderedDict(const OrderedDict&) = delete;
-  OrderedDict(OrderedDict&&) = delete;
-  OrderedDict& operator=(const OrderedDict&) = delete;
-  OrderedDict& operator=(OrderedDict&&) = delete;
-
-  void append(IdIndex name, AstNodeIndex node_index) {
-    auto it = m_map.find(name);
-    if (it == m_map.end()) {
-      m_map.emplace(name, node_index);
-      m_nodes.emplace_back(node_index);
-    }
-  }
-
-  void append(AstNodeIndex node_index) {
-    m_nodes.emplace_back(node_index);
-  }
-
-  AstNodeIndex find(IdIndex name) const {
-    auto it = m_map.find(name);
-
-    if (it == m_map.end()) {
-      return UndefinedAstNodeIndex;
-    }
-    return it->second;
-  }
-
-  const std::vector<AstNodeIndex>& get_nodes() const { return m_nodes;}
-
-private:
-  using Map = std::unordered_map<IdIndex, AstNodeIndex> ;
-  Map m_map;
-  std::vector<AstNodeIndex> m_nodes;
-};
+#include "ast_node_index.hpp"
+#include "id_index.hpp"
+#include "ordered_dict.hpp"
 
 struct AstNode {
   enum class Kind {
@@ -245,10 +207,10 @@ struct AstNode {
 struct Scope {
       AstNodeIndex outer_scope;
       IdIndex name;
-      OrderedDict* dict;
+      OrderedDict<IdIndex, AstNodeIndex>* dict;
 
       void add_node(AstNodeIndex node_idx, IdIndex name = UndefinedIdIndex) {
-        if (!dict) dict = new OrderedDict;
+        if (!dict) dict = new OrderedDict<IdIndex, AstNodeIndex>;
         if (name != UndefinedIdIndex) {
           dict->append(name, node_idx);
         } else {

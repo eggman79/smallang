@@ -1,11 +1,13 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
+#include "id_index.hpp"
 #include "lexer.hpp"
 #include "token.hpp"
 #include "parser.hpp"
 #include "ast.hpp"
 #include "id_cache.hpp"
+#include "ir_value.hpp"
 
 TEST(IdCache, Simple) {
   IdCache id_cache;
@@ -23,8 +25,6 @@ TEST(Ast, Scope) {
   auto a_field_idx = ast.create(AstNode::Kind::StructField);
   auto& a_field = ast[a_field_idx];
 
-
-
   a_field.struct_field.value.type = ast.create(AstNode::Kind::I32Type);
   struct_node.struc.scope.add_node(a_field_idx, a_field.struct_field.name);
   {
@@ -35,7 +35,7 @@ TEST(Ast, Scope) {
 }
 
 TEST(OrderedDict, Simple) {
-  OrderedDict dict;
+  OrderedDict<IdIndex, AstNodeIndex> dict;
   IdCache id_cache;
   Ast ast;
   {
@@ -191,6 +191,10 @@ TEST(Ast, Expession) {
     EXPECT_STREQ(id_cache.get(left_node.string_literal.string).str, "string_test");
     EXPECT_STREQ(id_cache.get(right_node.string_literal.string).str, "cos");
   }
+}
+
+TEST(IrValue, Simple) {
+  IrValue val;
 }
 
 TEST(Parser, Simple) {
