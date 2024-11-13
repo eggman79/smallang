@@ -7,18 +7,20 @@
 #include <memory>
 
 #include "token.hpp"
+#include "id_cache.hpp"
 
 class Lexer {
 public:
-  using Tokens = std::vector<std::unique_ptr<Token>>;
+  using Tokens = std::vector<Token>;
 
-  Lexer(std::istream& in, Tokens& tokens) : m_in(in), m_tokens(tokens) {
+  Lexer(std::istream& in, Tokens& tokens, IdCache& id_cache) : 
+    m_in(in), m_tokens(tokens), m_id_cache(id_cache) {
     m_buffer.reserve(1024);
     next_char();
   }
 
   const Token& last() {
-    return *m_tokens.back();
+    return m_tokens.back();
   }
 
   const Token& next() {
@@ -26,8 +28,8 @@ public:
     m_buffer.clear();
 
     if (m_last_char == EOF) {
-      if (m_tokens.empty() || m_tokens.back()->get_kind() != Token::Kind::Eof) {
-        m_tokens.emplace_back(std::make_unique<Token>(Token::Kind::Eof));
+      if (m_tokens.empty() || m_tokens.back().get_kind() != Token::Kind::Eof) {
+        m_tokens.emplace_back(Token::Kind::Eof);
       }
     }
     else if (::isalpha(m_last_char) || m_last_char == '_') {
@@ -39,9 +41,10 @@ public:
       const auto token_kind = Token::id_2_token_kind(m_buffer);
       
       if (token_kind == Token::Kind::Id) {
-        m_tokens.emplace_back(std::make_unique<IdToken>(m_buffer));
+        m_tokens.emplace_back(token_kind);
+        m_tokens.back().id = m_id_cache.get(m_buffer.c_str(), m_buffer.size());
       } else {
-        m_tokens.emplace_back(std::make_unique<Token>(token_kind));
+        m_tokens.emplace_back(token_kind);
       }
     } else if (::isdigit(m_last_char)) {
       do {
@@ -49,7 +52,8 @@ public:
         next_char();
       } while (::isdigit(last_char()));
       const auto value = atoi(m_buffer.c_str());
-      m_tokens.emplace_back(std::make_unique<LiteralToken<int32_t, Token::Kind::I32Literal>>(value));
+      m_tokens.emplace_back(Token::Kind::I32Literal);
+      m_tokens.back().i32 = value;
     } else {
       switch (m_last_char) {
         case '(': push_token_kind(Token::Kind::LeftParen); break;
@@ -79,7 +83,8 @@ public:
             m_buffer += last_char();
             next_char();
           } 
-          m_tokens.emplace_back(std::make_unique<LiteralToken<std::string, Token::Kind::StringLiteral>>(m_buffer));
+          m_tokens.emplace_back(Token::Kind::StringLiteral);
+          m_tokens.back().str = m_id_cache.get(m_buffer.c_str(), m_buffer.size());
           break;
         }
         default:
@@ -88,13 +93,14 @@ public:
       }
       next_char();
     }
-    return *m_tokens.back();
+    return m_tokens.back();
   }
 
 private:
   std::istream& m_in;
   Tokens& m_tokens;
   std::string m_buffer;
+  IdCache& m_id_cache;
   char m_last_char = 0;
 
   inline char next_char() {
@@ -107,7 +113,7 @@ private:
   }
 
   inline void push_token_kind(Token::Kind kind) {
-    m_tokens.emplace_back(std::make_unique<Token>(kind));
+    m_tokens.emplace_back(kind);
   }
 
   void omit_white_spaces() {

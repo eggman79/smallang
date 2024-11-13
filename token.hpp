@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <type_traits>
+#include "id_index.hpp"
 
 class Token {
 public:
@@ -16,10 +17,10 @@ public:
     Eof, Semicolon, Unknown};
 
   Token(Kind kind) : m_kind(kind) {}
-  Token(const Token&) = delete;
-  Token(Token&&) = delete;
-  Token& operator=(const Token&) = delete;
-  Token& operator=(Token&&) = delete;
+  Token(const Token&) = default;
+  Token(Token&&) = default;
+  Token& operator=(const Token&) = default;
+  Token& operator=(Token&&) = default;
 
   Token::Kind get_kind() const {
     return m_kind;
@@ -33,35 +34,29 @@ public:
 
     return it->second;
   }
-private:
   Kind m_kind;
+  union {
+    IdIndex id; 
+    int32_t i32;
+    int16_t i16;
+    int8_t i8;
+    uint32_t u32;
+    uint16_t u16;
+    uint8_t u8;
+    IdIndex str;
+  };
+private:
   using Keywords = std::unordered_map<std::string, Token::Kind>;
   static const Keywords s_keywords;
 };
 
-class IdToken : public Token {
-public:
-  IdToken(const std::string& id) : Token(Token::Kind::Id), m_id(id) {}
-  IdToken(const IdToken&) = delete;
-  IdToken(IdToken&&) = delete;
-  IdToken& operator=(const IdToken&) = delete;
-  IdToken& operator=(IdToken&&) = delete;
-  const std::string& get_id() const { return m_id;}
-private:
-  const std::string m_id;
-};
+using TokenIndex = uint32_t;
 
-template <typename Type, Token::Kind TokenKind>
-class LiteralToken : public Token {
-public:
-  LiteralToken(Type value) : Token(TokenKind), m_value(value) {}
-  LiteralToken(const LiteralToken&) = delete;
-  LiteralToken(LiteralToken&&) = delete;
-  LiteralToken& operator=(const LiteralToken&) = delete;
-  LiteralToken& operator=(LiteralToken&&) = delete;
-  Type get_value() const { return m_value;}
-private:
-  Type m_value;
+struct TokenRange {
+  TokenIndex from;
+  TokenIndex to;
+
+  uint32_t count() const { return to - from + 1; }
 };
 
 #endif  // TOKEN_HPP
