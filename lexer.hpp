@@ -65,6 +65,7 @@ public:
         case '*': push_token_kind(Token::Kind::Mul); break;
         case '/': push_token_kind(Token::Kind::Div); break;
         case ';': push_token_kind(Token::Kind::Semicolon); break;
+        case ':': push_token_kind(Token::Kind::Colon); break;
         case '=': push_token_kind(Token::Kind::Assign); break;
         case '>': push_token_kind(Token::Kind::Great); break;
         case '<': push_token_kind(Token::Kind::Less); break;

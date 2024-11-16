@@ -2,6 +2,7 @@
 #define PARSER_HPP
 
 #include "id_cache.hpp"
+
 class Lexer;
 class Ast;
 class IdCache;
@@ -16,6 +17,8 @@ private:
   Lexer& m_lexer;
   Ast& m_ast;
   IdCache& m_id_cache;
+
+
 };
 
 #endif  // PARSER_HPP

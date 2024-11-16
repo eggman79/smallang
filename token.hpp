@@ -15,7 +15,7 @@ public:
     LeftParen, RightParen, LeftBrace, RightBrace, 
     Add, Sub, Mul, Div, Assign, Equals, Great, Less, GreatOrEqual, LessOrEqual,
     I32, I16, I8, U32, U16, U8, F32, F64,
-    Eof, Semicolon, Unknown};
+    Eof, Colon, Semicolon, Unknown};
 
   Token(Kind kind) : m_kind(kind) {}
   Token(const Token&) = default;
