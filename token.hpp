@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <type_traits>
 #include "id_index.hpp"
+#include "strong_type.hpp"
 
 class Token {
 public:
@@ -50,13 +51,20 @@ private:
   static const Keywords s_keywords;
 };
 
-using TokenIndex = uint32_t;
+struct TokenPhantom {};
+using TokenIndex = StrongType<std::uint32_t, TokenPhantom>;
+
+struct TokenIndexHash {
+  std::size_t operator()(const TokenIndex index) const noexcept {
+    return index.get();
+  }
+};
 
 struct TokenRange {
   TokenIndex from;
   TokenIndex to;
 
-  uint32_t count() const { return to - from + 1; }
+  uint32_t count() const { return to.get() - from.get() + 1; }
 };
 
 #endif  // TOKEN_HPP
