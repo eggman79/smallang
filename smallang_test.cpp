@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <sstream>
+#include <unordered_set>
 
 #include "id_index.hpp"
 #include "lexer.hpp"
@@ -8,6 +9,7 @@
 #include "ast.hpp"
 #include "id_cache.hpp"
 #include "ir_value.hpp"
+#include "strong_type.hpp"
 
 TEST(IdCache, Simple) {
   IdCache id_cache;
@@ -194,8 +196,22 @@ TEST(Ast, Expession) {
   }
 }
 
-TEST(IrValue, Simple) {
-  IrValue val;
+TEST(StrongType, Simple) {
+  struct IdIndexPhantom {};
+  using IdIndex = StrongType<uint32_t, IdIndexPhantom>;
+
+  struct IdIndexHash {
+    std::size_t operator()(const IdIndex id) const noexcept {
+      return id.get();
+    }
+  };
+  using Set = std::unordered_set<IdIndex, IdIndexHash>;
+  Set s;
+  s.emplace(12);
+  s.emplace(15);
+  s.emplace(16);
+  EXPECT_EQ(sizeof(IdIndex), sizeof(uint32_t));
+  EXPECT_NE(s.find(IdIndex(15)), s.end());
 }
 
 TEST(Parser, Simple) {
