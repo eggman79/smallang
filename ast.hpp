@@ -205,18 +205,19 @@ struct AstNode {
     }
   };
 struct Scope {
-      AstNodeIndex outer_scope;
-      IdIndex name;
-      OrderedDict<IdIndex, AstNodeIndex>* dict;
+    AstNodeIndex outer_scope;
+    IdIndex name;
+        using Dict = OrderedDict<IdIndex, AstNodeIndex, IdIndexHash>;
+    Dict* dict;
 
-      void add_node(AstNodeIndex node_idx, IdIndex name = UndefinedIdIndex) {
-        if (!dict) dict = new OrderedDict<IdIndex, AstNodeIndex>;
-        if (name != UndefinedIdIndex) {
-          dict->append(name, node_idx);
-        } else {
-          dict->append(node_idx);
-        }
+    void add_node(AstNodeIndex node_idx, IdIndex name = UndefinedIdIndex) {
+      if (!dict) dict = new Dict();
+      if (name != UndefinedIdIndex) {
+        dict->append(name, node_idx);
+      } else {
+        dict->append(node_idx);
       }
+    }
     };
 struct StructOrUnion {
       Scope scope;

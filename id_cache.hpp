@@ -36,16 +36,16 @@ public:
       strncpy(s, str, length);
       s[length] = '\0';
 
-      const auto id_index = m_strings.size();
+      const auto id_index = (IdIndex::value_type)m_strings.size();
       m_map.emplace(StringPair{s, length}, id_index);
       m_strings.emplace_back(String{s, length});
-      return id_index;
+      return IdIndex(id_index);
     }
     return it->second;
   }
 
   const String& get(IdIndex index) const {
-    return m_strings[index];
+    return m_strings[index.get()];
   }
 
 private:

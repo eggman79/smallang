@@ -3,9 +3,18 @@
 
 #include <cstdint>
 #include <limits>
+#include "strong_type.hpp"
 
-using IdIndex = uint32_t;
+struct IdIndexPhantom {};
+using IdIndex = StrongType<uint32_t, IdIndexPhantom>;
 static const IdIndex UndefinedIdIndex = std::numeric_limits<IdIndex>::max();
+
+struct IdIndexHash {
+  std::size_t operator()(const IdIndex& index) const noexcept {
+    return index.get();
+  }
+};
+
 
 #endif  // ID_INDEX_HPP
 

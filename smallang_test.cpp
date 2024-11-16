@@ -37,7 +37,7 @@ TEST(Ast, Scope) {
 }
 
 TEST(OrderedDict, Simple) {
-  OrderedDict<IdIndex, AstNodeIndex> dict;
+  OrderedDict<IdIndex, AstNodeIndex, IdIndexHash> dict;
   IdCache id_cache;
   Ast ast;
   {

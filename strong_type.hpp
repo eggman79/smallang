@@ -1,9 +1,13 @@
 #ifndef STRONG_TYPE_HPP
 #define STRONG_TYPE_HPP
 
+#include <cstdint>
+
 template <typename Type, typename PhantomParam>
 class StrongType {
 public:
+  using value_type = uint32_t;
+
   StrongType() = default;
   explicit StrongType(Type value) : m_value(value) {}
   StrongType(const StrongType&) = default;

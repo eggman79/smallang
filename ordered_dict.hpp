@@ -1,13 +1,14 @@
 #ifndef ORDERED_DICT_HPP
 #define ORDERED_DICT_HPP
 
+#include <functional>
 #include <vector>
 #include <unordered_map>
 
 #include "ast_node_index.hpp"
 #include "id_index.hpp"
 
-template <typename Key, typename Value>
+template <typename Key, typename Value, typename Hash = std::hash<Key>, typename Equal = std::equal_to<Key>>
 class OrderedDict {
 public:
   OrderedDict() = default;
@@ -40,7 +41,7 @@ public:
   const std::vector<Value>& get_nodes() const { return m_nodes;}
 
 private:
-  using Map = std::unordered_map<Key, Value>;
+  using Map = std::unordered_map<Key, Value, Hash, Equal>;
   Map m_map;
   std::vector<Value> m_nodes;
 };
