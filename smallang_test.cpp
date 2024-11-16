@@ -2,6 +2,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "ast_node_index.hpp"
 #include "id_index.hpp"
 #include "lexer.hpp"
 #include "token.hpp"
@@ -80,7 +81,7 @@ TEST(Ast, FunTypeWithNamedParams) {
   fun_type.fun_type.return_type = ast.create(AstNode::Kind::F32Type);
 
   {
-    auto& node = ast[0];
+    auto& node = ast[AstNodeIndex(0)];
     ASSERT_EQ(node.kind, AstNode::Kind::FunTypeWithNamedParams);
     ASSERT_NE(node.fun_type.param_types, nullptr);
     auto& param1 = ast[node.fun_type.param_types->operator[](0)];

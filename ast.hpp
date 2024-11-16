@@ -327,25 +327,25 @@ public:
   AstNodeIndex create(AstNode::Kind kind) {
     if (removed.empty()) {
       nodes.emplace_back(kind);
-      return nodes.size() - 1;
+      return AstNodeIndex(nodes.size() - 1);
     }
     const auto index = removed.back();
-    nodes[index].kind = kind;
+    nodes[index.get()].kind = kind;
     removed.pop_back();
     return index;
   }
 
   void remove(AstNodeIndex index) {
-    nodes[index].clean();
+    nodes[index.get()].clean();
     removed.emplace_back(index);
   }
 
   const AstNode& operator[](AstNodeIndex index) const {
-    return nodes[index];
+    return nodes[index.get()];
   }
 
   AstNode& operator[](AstNodeIndex index) {
-    return nodes[index];
+    return nodes[index.get()];
   }
 private:
   std::deque<AstNode> nodes;
