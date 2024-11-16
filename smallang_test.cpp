@@ -28,6 +28,7 @@ TEST(Ast, Scope) {
   auto& a_field = ast[a_field_idx];
 
   a_field.struct_field.value.type = ast.create(AstNode::Kind::I32Type);
+  a_field.struct_field.name = id_cache.get("a_field");
   struct_node.struc.scope.add_node(a_field_idx, a_field.struct_field.name);
   {
     auto a_field_idx = ast[struct_idx].scope.dict->find(id_cache.get("a_field"));
