@@ -11,6 +11,7 @@
 #include "id_cache.hpp"
 #include "ir_value.hpp"
 #include "strong_type.hpp"
+#include "ir.hpp"
 
 TEST(IdCache, Simple) {
   IdCache id_cache;
@@ -224,6 +225,23 @@ TEST(Parser, Simple) {
   Ast ast;
   Parser parser(lexer, ast, id_cache);
   parser.parse();
+}
+
+TEST(Ir, Simple) {
+  using namespace ir;
+  Function f(0, 0, 0);
+  auto& add = f.add(Instr::add, Type::D, Arg{.i_value=1}, Arg{.i_value=2}, Arg{.i_value=3});
+  auto& mov = f.add(Instr::mov, Type::D, Arg{.i_value=1}, Arg{.i_value=2});
+  auto& jmp = f.add(Instr::jmp, Type::V, Arg{.node_pointer=&add});
+
+  auto node = f.get_head();
+  EXPECT_EQ(node->m_instr, Instr::add);
+  node = node->m_next;
+  EXPECT_EQ(node->m_instr, Instr::mov);
+  node = node->m_next;
+  EXPECT_EQ(node->m_instr, Instr::jmp);
+  node = node->m_next;
+  EXPECT_TRUE(node == nullptr);
 }
 
 int main(int argc, char* argv[]) {
