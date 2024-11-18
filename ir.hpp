@@ -85,7 +85,7 @@ struct Value {
 
 struct Arg {
   union {
-    uint16_t local;
+    uint16_t local_index;
     Node* node_pointer;
     Function* function_pointer;
   };
@@ -149,9 +149,9 @@ public:
         case Instr::shl:        
         case Instr::shr: {
           NodeArgs<3>* node_args = (NodeArgs<3>*)node;
-          compact_bytes(node_args->args[0].local);
-          compact_bytes(node_args->args[1].local);
-          compact_bytes(node_args->args[2].local);
+          compact_bytes(node_args->args[0].local_index);
+          compact_bytes(node_args->args[1].local_index);
+          compact_bytes(node_args->args[2].local_index);
           break;
         }
         case Instr::je:
@@ -170,6 +170,13 @@ public:
           switch (node->m_instr) {
             case Instr::jz:
             case Instr::jnz:
+              compact_bytes(node_args->args[1].local_index);
+              break;
+            case Instr::jmp:
+              break;
+            default:
+              compact_bytes(node_args->args[1].local_index);
+              compact_bytes(node_args->args[2].local_index);
               break;
           }
           break;
@@ -220,12 +227,18 @@ public:
     }
   }
 
+
   std::vector<uint8_t>& get_compacted_code() { assert(m_compacted); return m_compacted_code; }
   const std::vector<uint8_t>& get_compacted_code() const { assert(m_compacted); return m_compacted_code; }
 
-  void add_consts(std::vector<Value>&& values) {
+  using Consts = std::vector<Value>;
+
+  void set_consts(Consts&& values) {
     m_consts = std::move(values);
   }
+
+  Consts& get_consts() { return m_consts; }
+  const Consts& get_consts() const { return m_consts; }
 
 private:
   Node* m_head = nullptr;
@@ -233,7 +246,7 @@ private:
   Node* m_insert_point = nullptr;
   std::vector<uint8_t> m_compacted_code;
 
-  std::vector<Value> m_consts;
+  Consts m_consts;
 
   uint16_t m_args_size;
   uint16_t m_locals_size;
