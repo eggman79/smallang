@@ -4,8 +4,10 @@
 #include <cassert>
 #include <cstdint>
 #include <vector>
+#include <array>
 #include <tuple>
 #include "strong_type.hpp"
+#include "token.hpp"
 
 namespace ir {
 
@@ -16,7 +18,7 @@ enum class Type: uint8_t {
   I,
   L,
   D,
-  B,
+  S,
   V,
 };
 enum class Instr: std::uint8_t {
@@ -59,18 +61,27 @@ static std::size_t instr_to_args_count(Instr instr, Type type) {
 }
 
 struct Node {
-  Node* m_prev = nullptr;
-  Node* m_next = nullptr;
+  union {
+    struct {
+      Node* m_prev = nullptr;
+      Node* m_next = nullptr;
+    };
+    uint64_t m_offset_during_compacting;
+  };
   Instr m_instr;
   Type m_type; 
 };
+
+struct Function;
 
 struct Arg {
   union {
     uint64_t l_value;
     uint32_t i_value;
     double d_value;
+    bool b_value;
     Node* node_pointer;
+    Function* function_pointer;
   };
 };
 
@@ -97,29 +108,85 @@ private:
     return *node;
   }  
 
-  void compact() {
-    auto node = get_head();
-    while (node) {
-      auto next = node->m_next;
-      m_compacted_code.emplace_back((uint8_t)node->m_instr);
-      m_compacted_code.emplace_back((uint8_t)node->m_type);
-
-      const auto args_count = instr_to_args_count(node->m_instr, node->m_type);
-
-      switch (node->m_instr) {
-        
-      }     
-
-      node = next;
+  template <typename T>
+  void compact_bytes(T bytes) {
+    uint8_t* b = (uint8_t*)&bytes;
+    for (size_t i = 0; i < sizeof(bytes); ++i) {
+      m_compacted_code.emplace_back(b[i]);
     }
   }
+
+  void verify() {
+
+  }
+
+  void compact() {
+    assert(!m_compacted && m_compacted_code.empty());
+    auto node = get_head();
+    m_compacted_code.reserve(1024);
+    std::vector<std::pair<Node*, uint64_t>> jump_offsets; 
+
+    while (node) {
+      auto next = node->m_next;
+      compact_bytes(node->m_instr);
+      compact_bytes(node->m_type);
+      const auto args_count = instr_to_args_count(node->m_instr, node->m_type);
+      const auto offset = m_compacted_code.size();
+
+      switch (node->m_instr) {
+        case Instr::add:        
+        case Instr::sub:        
+        case Instr::mul:        
+        case Instr::div:        
+        case Instr::shl:        
+        case Instr::shr: {
+          NodeArgs<3>* node_args = (NodeArgs<3>*)node;
+
+          switch (node->m_type) {
+            case Type::I:
+              compact_bytes(node_args->args[0].i_value);
+              compact_bytes(node_args->args[1].i_value);
+              compact_bytes(node_args->args[2].i_value);
+              break;
+            case Type::D:
+            case Type::L:
+              compact_bytes(node_args->args[0].d_value);
+              compact_bytes(node_args->args[1].d_value);
+              compact_bytes(node_args->args[2].d_value);
+              break;
+          }
+          break;
+        }
+        case Instr::je:
+        case Instr::jne:
+        case Instr::jz:
+        case Instr::jnz:
+        case ir::Instr::jmp: {
+          auto node_args = (NodeArgs<1>*)node;
+          jump_offsets.emplace_back(node_args->args[0].node_pointer, m_compacted_code.size());
+          m_compacted_code.emplace_back(0);
+          m_compacted_code.emplace_back(0);
+          break;
+        }
+      }     
+      node->m_offset_during_compacting = offset;
+      node = next;
+    }
+
+  for (auto& p : jump_offsets) {
+    
+    }
+
+    m_compacted = true;
+    m_compacted_code.shrink_to_fit();
+  }
 public:
-  Node& add(Instr instr, Type type) {
+  inline Node& add(Instr instr, Type type) {
     return add_impl<Node>(instr, type);
   }
 
   template <typename...Args>
-  Node& add(Instr instr, Type type, Args&&...args) {
+  inline Node& add(Instr instr, Type type, Args&&...args) {
     constexpr auto args_count = sizeof...(args);
     auto& node = add_impl<NodeArgs<args_count>>(instr, type);
     std::size_t i = 0;
@@ -160,7 +227,7 @@ private:
 };
 
 struct Module {
-  
+
 };
 
 }

@@ -244,6 +244,12 @@ TEST(Ir, Simple) {
   EXPECT_TRUE(node == nullptr);
 }
 
+TEST(Ir, Compact) {
+  using namespace ir;
+  Function f(0, 0, 0);
+
+}
+
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

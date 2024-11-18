@@ -1,19 +1,3 @@
-syntax:
-
-class Person(name: string, surname: string) {
-
-}
-
-class Team(persons: Array<string>) {
-}
-
-
-fun main(): Team {
-  val persons = [Person("seba","gorka"), Person("robert", "achr")]
-  return Team(persons)
-}
-
-ir:
 
 fun f2(a: i32, b: i32): i32 {
   for (i in 0..100) {
