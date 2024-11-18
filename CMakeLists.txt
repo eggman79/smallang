@@ -4,7 +4,7 @@ project(smallang)
 find_package(GTest REQUIRED)
 
 add_library(smallang_lib STATIC ast.hpp token.cpp token.hpp lexer.hpp parser.cpp parser.hpp id_cache.hpp id_index.hpp ast_node_index.hpp) 
-add_executable(smallang smallang.cpp)
+add_executable(smallang main.cpp)
 add_executable(smallang_test tests.cpp)
 target_link_libraries(smallang PRIVATE smallang_lib)
 target_link_libraries(smallang_test PRIVATE smallang_lib GTest::GTest)

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 #include <array>
+#include <deque>
 #include "strong_type.hpp"
 #include "id_index.hpp"
 
@@ -100,19 +101,18 @@ struct NodeArgs : Node {
   std::array<Arg, ArgsCount> args;
 };
 
-
 class FunctionBuilder {
 public:
   FunctionBuilder& set_args_size(uint16_t size) { m_args_size = size; return *this; }
-  FunctionBuilder& set_consts_size(uint16_t size) { m_consts_size = size; return *this; }
   FunctionBuilder& set_locals_size(uint16_t size) { m_locals_size = size; return *this; }
+  FunctionBuilder& add_const(Value&& value) { m_consts.emplace_back(std::move(value)); return *this; }
   uint16_t get_args_size() const { return m_args_size; }
-  uint16_t get_consts_size() const { return m_consts_size; }
   uint16_t get_locals_size() const { return m_locals_size; }
+  std::vector<Value>& get_consts() { return m_consts; }
 private:
   uint16_t m_args_size = 0;
-  uint16_t m_consts_size = 0;
   uint16_t m_locals_size = 0;
+  std::vector<Value> m_consts;
 };
 
 struct Function {
@@ -256,11 +256,7 @@ public:
 
   Function(const FunctionBuilder& builder) : 
     m_args_size(builder.get_args_size()), 
-    m_locals_size(builder.get_locals_size()), 
-    m_consts_size(builder.get_locals_size()) {}
-
-  Function(uint16_t args_size, int16_t locals_size, uint16_t consts_size) : 
-    m_args_size(args_size), m_locals_size(locals_size), m_consts_size(consts_size) {}
+    m_locals_size(builder.get_locals_size()) {}
 
   ~Function() {
     auto node = m_head;
@@ -270,7 +266,6 @@ public:
       node = next;
     }
   }
-
 
   std::vector<uint8_t>& get_compacted_code() { assert(m_compacted); return m_compacted_code; }
   const std::vector<uint8_t>& get_compacted_code() const { assert(m_compacted); return m_compacted_code; }
@@ -284,7 +279,12 @@ public:
   Consts& get_consts() { return m_consts; }
   const Consts& get_consts() const { return m_consts; }
 
+  void set_index(uint32_t index) { m_index = index; }
+  uint32_t get_index() const { return m_index; }
+
 private:
+  static const uint32_t UndefinedIndex = std::numeric_limits<uint32_t>::max();
+  uint32_t m_index = UndefinedIndex;
   Node* m_head = nullptr;
   Node* m_tail = nullptr;
   Node* m_insert_point = nullptr;
@@ -294,12 +294,24 @@ private:
 
   uint16_t m_args_size;
   uint16_t m_locals_size;
-  uint16_t m_consts_size;
   bool m_compacted = false;
 };
 
-struct Module {
+class Module {
+public:
+  using Functions = std::deque<Function>;  
 
+  Function& add_function(FunctionBuilder& builder) {
+    m_functions.emplace_back(builder);
+    return m_functions.back();
+  }
+
+  Functions& get_functions() { return m_functions; }
+  const Functions& get_functions() const { return m_functions; }
+
+private:
+  Functions m_functions; 
+  uint32_t m_base_index;
 };
 
 }
