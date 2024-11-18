@@ -23,7 +23,7 @@ enum class Type: uint8_t {
 enum class Instr: std::uint8_t {
   mov, add, sub, div, mul, shr, shl, inc, dec, 
   jmp, jg, jl, jge, jle, je, jne, jz, jnz,
-  call, ret, label,
+  call, callv, ret, retv, label,
 };
 
 static std::size_t instr_to_args_count(Instr instr, Type type) {
@@ -52,8 +52,10 @@ static std::size_t instr_to_args_count(Instr instr, Type type) {
       return 3;
     case Instr::ret:
     case Instr::call:
-      if (type == Type::V) return 0;
       return 1;
+    case Instr::callv:
+    case Instr::retv:
+      return 0;
     default:
       assert(false);
   }
@@ -136,12 +138,27 @@ public:
 
     while (node) {
       auto next = node->m_next;
+
+
       const auto offset = m_compacted_code.size();
       compact_bytes(node->m_instr);
       compact_bytes(node->m_type);
       const auto args_count = instr_to_args_count(node->m_instr, node->m_type);
 
       switch (node->m_instr) {
+        case Instr::ret:
+        case Instr::inc:
+        case Instr::dec: {
+          NodeArgs<1>* node_args = (NodeArgs<1>*)node;
+          compact_bytes(node_args->args[0].local_index);
+          break;
+        }
+        case Instr::mov: {
+          NodeArgs<2>* node_args = (NodeArgs<2>*)node;
+          compact_bytes(node_args->args[0].local_index);
+          compact_bytes(node_args->args[1].local_index);
+          break;
+        }
         case Instr::add:        
         case Instr::sub:        
         case Instr::mul:        
@@ -152,6 +169,10 @@ public:
           compact_bytes(node_args->args[0].local_index);
           compact_bytes(node_args->args[1].local_index);
           compact_bytes(node_args->args[2].local_index);
+          break;
+        }
+        case Instr::call: {
+          NodeArgs<1>* node_args = (NodeArgs<1>*)node;
           break;
         }
         case Instr::je:
@@ -181,6 +202,9 @@ public:
           }
           break;
         }
+        default:
+          assert(false);
+          break;
       }     
       node->m_offset_during_compacting = offset;
       node = next;
