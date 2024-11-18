@@ -230,8 +230,8 @@ TEST(Parser, Simple) {
 TEST(Ir, Simple) {
   using namespace ir;
   Function f(0, 0, 0);
-  auto& add = f.add(Instr::add, Type::D, Arg{.i_value=1}, Arg{.i_value=2}, Arg{.i_value=3});
-  auto& mov = f.add(Instr::mov, Type::D, Arg{.i_value=1}, Arg{.i_value=2});
+  auto& add = f.add(Instr::add, Type::D, Arg{.local=1}, Arg{.local=2}, Arg{.local=3});
+  auto& mov = f.add(Instr::mov, Type::D, Arg{.local=1}, Arg{.local=2});
   auto& jmp = f.add(Instr::jmp, Type::V, Arg{.node_pointer=&add});
 
   auto node = f.get_head();
@@ -247,6 +247,15 @@ TEST(Ir, Simple) {
 TEST(Ir, Compact) {
   using namespace ir;
   Function f(0, 0, 0);
+  f.add(Instr::add, Type::I, Arg{.local = 1}, Arg{.local = 1}, Arg{.local = 2});
+  f.add(Instr::add, Type::I, Arg{.local = 1}, Arg{.local = 1}, Arg{.local = 2});
+  auto& third_node = f.add(Instr::add, Type::I, Arg{.local = 1}, Arg{.local = 1}, Arg{.local = 2});
+  f.add(Instr::add, Type::I, Arg{.local = 1}, Arg{.local = 1}, Arg{.local = 2});
+  f.add(Instr::jmp, Type::V, Arg{.node_pointer = &third_node});
+
+  f.compact();
+
+
 
 }
 

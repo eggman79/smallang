@@ -23,7 +23,7 @@ f2.l1:
   addi 2 1 3 
   addi -2 -2 2
   inci 1
-  jlei 1 5 f2.l1
+  jlei f2.l1 1 5
   reti -2
 
 f1:

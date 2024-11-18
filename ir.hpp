@@ -5,9 +5,8 @@
 #include <cstdint>
 #include <vector>
 #include <array>
-#include <tuple>
 #include "strong_type.hpp"
-#include "token.hpp"
+#include "id_index.hpp"
 
 namespace ir {
 
@@ -74,16 +73,25 @@ struct Node {
 
 struct Function;
 
+struct Value {
+  union {
+    IdIndex str_value;
+    uint32_t i_value;
+    uint64_t l_value;
+    IdIndex d_value;
+  };
+  Type type;
+};
+
 struct Arg {
   union {
-    uint64_t l_value;
-    uint32_t i_value;
-    double d_value;
-    bool b_value;
+    uint16_t local;
     Node* node_pointer;
     Function* function_pointer;
   };
 };
+
+static_assert(sizeof(Arg) == sizeof(uintptr_t), "too big size");
 
 template <std::size_t ArgsCount>
 struct NodeArgs : Node {
@@ -115,7 +123,7 @@ private:
       m_compacted_code.emplace_back(b[i]);
     }
   }
-
+public:
   void verify() {
 
   }
@@ -128,10 +136,10 @@ private:
 
     while (node) {
       auto next = node->m_next;
+      const auto offset = m_compacted_code.size();
       compact_bytes(node->m_instr);
       compact_bytes(node->m_type);
       const auto args_count = instr_to_args_count(node->m_instr, node->m_type);
-      const auto offset = m_compacted_code.size();
 
       switch (node->m_instr) {
         case Instr::add:        
@@ -141,31 +149,29 @@ private:
         case Instr::shl:        
         case Instr::shr: {
           NodeArgs<3>* node_args = (NodeArgs<3>*)node;
-
-          switch (node->m_type) {
-            case Type::I:
-              compact_bytes(node_args->args[0].i_value);
-              compact_bytes(node_args->args[1].i_value);
-              compact_bytes(node_args->args[2].i_value);
-              break;
-            case Type::D:
-            case Type::L:
-              compact_bytes(node_args->args[0].d_value);
-              compact_bytes(node_args->args[1].d_value);
-              compact_bytes(node_args->args[2].d_value);
-              break;
-          }
+          compact_bytes(node_args->args[0].local);
+          compact_bytes(node_args->args[1].local);
+          compact_bytes(node_args->args[2].local);
           break;
         }
         case Instr::je:
         case Instr::jne:
         case Instr::jz:
         case Instr::jnz:
+        case Instr::jg:
+        case Instr::jge:
+        case Instr::jl:
+        case Instr::jle:
         case ir::Instr::jmp: {
           auto node_args = (NodeArgs<1>*)node;
           jump_offsets.emplace_back(node_args->args[0].node_pointer, m_compacted_code.size());
-          m_compacted_code.emplace_back(0);
-          m_compacted_code.emplace_back(0);
+          compact_bytes((uint16_t)0);
+
+          switch (node->m_instr) {
+            case Instr::jz:
+            case Instr::jnz:
+              break;
+          }
           break;
         }
       }     
@@ -173,14 +179,13 @@ private:
       node = next;
     }
 
-  for (auto& p : jump_offsets) {
-    
+    for (auto& p : jump_offsets) {
+      auto ptr = (uint16_t*)&m_compacted_code.data()[p.second];
+      *ptr = (uint16_t)p.first->m_offset_during_compacting;
     }
-
     m_compacted = true;
     m_compacted_code.shrink_to_fit();
   }
-public:
   inline Node& add(Instr instr, Type type) {
     return add_impl<Node>(instr, type);
   }
@@ -203,8 +208,8 @@ public:
   Node* get_head() const { return m_head;}
   Node* get_tail() const { return m_tail;}
 
-  Function(uint16_t args, int16_t locals, uint16_t consts) : 
-    m_args(args), m_locals(locals), m_consts(consts) {}
+  Function(uint16_t args_size, int16_t locals_size, uint16_t consts_size) : 
+    m_args_size(args_size), m_locals_size(locals_size), m_consts_size(consts_size) {}
 
   ~Function() {
     auto node = m_head;
@@ -214,15 +219,25 @@ public:
       node = next;
     }
   }
+
+  std::vector<uint8_t>& get_compacted_code() { assert(m_compacted); return m_compacted_code; }
+  const std::vector<uint8_t>& get_compacted_code() const { assert(m_compacted); return m_compacted_code; }
+
+  void add_consts(std::vector<Value>&& values) {
+    m_consts = std::move(values);
+  }
+
 private:
   Node* m_head = nullptr;
   Node* m_tail = nullptr;
   Node* m_insert_point = nullptr;
   std::vector<uint8_t> m_compacted_code;
 
-  uint16_t m_args;
-  uint16_t m_locals;
-  uint16_t m_consts;
+  std::vector<Value> m_consts;
+
+  uint16_t m_args_size;
+  uint16_t m_locals_size;
+  uint16_t m_consts_size;
   bool m_compacted = false;
 };
 
