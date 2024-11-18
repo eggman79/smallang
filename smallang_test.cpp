@@ -253,7 +253,6 @@ TEST(Ir, Compact) {
   f.add(Instr::add, Type::I, Arg{.local_index = 1}, Arg{.local_index = 1}, Arg{.local_index = 2});
   f.add(Instr::jmp, Type::V, Arg{.node_pointer = &third_node});
 
-  EXPECT_FALSE(true); 
   f.compact();
 }
 
