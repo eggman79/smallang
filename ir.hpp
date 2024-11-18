@@ -100,6 +100,21 @@ struct NodeArgs : Node {
   std::array<Arg, ArgsCount> args;
 };
 
+
+class FunctionBuilder {
+public:
+  FunctionBuilder& set_args_size(uint16_t size) { m_args_size = size; return *this; }
+  FunctionBuilder& set_consts_size(uint16_t size) { m_consts_size = size; return *this; }
+  FunctionBuilder& set_locals_size(uint16_t size) { m_locals_size = size; return *this; }
+  uint16_t get_args_size() const { return m_args_size; }
+  uint16_t get_consts_size() const { return m_consts_size; }
+  uint16_t get_locals_size() const { return m_locals_size; }
+private:
+  uint16_t m_args_size = 0;
+  uint16_t m_consts_size = 0;
+  uint16_t m_locals_size = 0;
+};
+
 struct Function {
 private:
   template <typename NodeType>
@@ -239,6 +254,11 @@ public:
   Node* get_head() const { return m_head;}
   Node* get_tail() const { return m_tail;}
 
+  Function(const FunctionBuilder& builder) : 
+    m_args_size(builder.get_args_size()), 
+    m_locals_size(builder.get_locals_size()), 
+    m_consts_size(builder.get_locals_size()) {}
+
   Function(uint16_t args_size, int16_t locals_size, uint16_t consts_size) : 
     m_args_size(args_size), m_locals_size(locals_size), m_consts_size(consts_size) {}
 
@@ -257,8 +277,8 @@ public:
 
   using Consts = std::vector<Value>;
 
-  void set_consts(Consts&& values) {
-    m_consts = std::move(values);
+  void add_const(Value&& value) {
+    m_consts.emplace_back(value);
   }
 
   Consts& get_consts() { return m_consts; }

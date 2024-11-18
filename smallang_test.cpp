@@ -256,6 +256,19 @@ TEST(Ir, Compact) {
   f.compact();
 }
 
+TEST(Ir, Test) {
+  using namespace ir;
+  IdCache id_cache;
+  Function f(
+    FunctionBuilder()
+      .set_args_size(0)
+      .set_consts_size(2)
+      .set_locals_size(2));
+  f.add_const(Value{.str_value = id_cache.get("test", 4)});
+  f.add_const(Value{.i_value = 100});
+  f.add(Instr::mov, Type::I, Arg{.local_index = 1});
+}
+
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
