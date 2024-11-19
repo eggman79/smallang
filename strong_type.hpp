@@ -2,11 +2,21 @@
 #define STRONG_TYPE_HPP
 
 #include <cstdint>
+#include <limits>
+#include <vector>
 
 template <typename Type, typename PhantomParam>
 class StrongType {
 public:
-  using value_type = uint32_t;
+  using value_type = Type;
+
+  static inline const StrongType<Type, PhantomParam> undefined;
+
+  struct Hash {
+    std::size_t operator()(const StrongType<Type, PhantomParam>& type) const noexcept {
+      return type.get();
+    }
+  };
 
   StrongType() = default;
   explicit StrongType(Type value) : m_value(value) {}
@@ -37,7 +47,7 @@ public:
     return m_value >= value.m_value;
   }
 private:
-  Type m_value;
+  Type m_value = std::numeric_limits<Type>::max();
 };
 
 #endif  // STRONG_TYPE_HPP

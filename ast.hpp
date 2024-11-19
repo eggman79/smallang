@@ -207,12 +207,12 @@ struct AstNode {
 struct Scope {
     AstNodeIndex outer_scope;
     IdIndex name;
-        using Dict = OrderedDict<IdIndex, AstNodeIndex, IdIndexHash>;
+        using Dict = OrderedDict<IdIndex, AstNodeIndex, IdIndex::Hash>;
     Dict* dict;
 
-    void add_node(AstNodeIndex node_idx, IdIndex name = UndefinedIdIndex) {
+    void add_node(AstNodeIndex node_idx, IdIndex name = IdIndex::undefined) {
       if (!dict) dict = new Dict();
-      if (name != UndefinedIdIndex) {
+      if (name != IdIndex::undefined) {
         dict->append(name, node_idx);
       } else {
         dict->append(node_idx);

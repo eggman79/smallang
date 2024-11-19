@@ -3,11 +3,13 @@
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <vector>
 #include <array>
 #include <deque>
 #include "strong_type.hpp"
 #include "id_index.hpp"
+#include "ordered_dict.hpp"
 
 namespace ir {
 
@@ -103,19 +105,22 @@ struct NodeArgs : Node {
 
 class FunctionBuilder {
 public:
+  FunctionBuilder& set_name(IdIndex name) { m_name = name; return *this; }
   FunctionBuilder& set_args_size(uint16_t size) { m_args_size = size; return *this; }
   FunctionBuilder& set_locals_size(uint16_t size) { m_locals_size = size; return *this; }
   FunctionBuilder& add_const(Value&& value) { m_consts.emplace_back(std::move(value)); return *this; }
+  IdIndex get_name() const { return m_name; }
   uint16_t get_args_size() const { return m_args_size; }
   uint16_t get_locals_size() const { return m_locals_size; }
   std::vector<Value>& get_consts() { return m_consts; }
 private:
+  IdIndex m_name;
   uint16_t m_args_size = 0;
   uint16_t m_locals_size = 0;
   std::vector<Value> m_consts;
 };
 
-struct Function {
+class Function {
 private:
   template <typename NodeType>
   NodeType& add_impl(Instr instr, Type type) {
@@ -254,7 +259,15 @@ public:
   Node* get_head() const { return m_head;}
   Node* get_tail() const { return m_tail;}
 
-  Function(const FunctionBuilder& builder) : 
+  Function(FunctionBuilder& builder) : 
+    m_name(builder.get_name()),
+    m_consts(builder.get_consts()),
+    m_args_size(builder.get_args_size()), 
+    m_locals_size(builder.get_locals_size()) {}
+
+  Function(FunctionBuilder&& builder) : 
+    m_name(builder.get_name()),
+    m_consts(std::move(builder.get_consts())),
     m_args_size(builder.get_args_size()), 
     m_locals_size(builder.get_locals_size()) {}
 
@@ -283,6 +296,7 @@ public:
   uint32_t get_index() const { return m_index; }
 
 private:
+  IdIndex m_name;
   static const uint32_t UndefinedIndex = std::numeric_limits<uint32_t>::max();
   uint32_t m_index = UndefinedIndex;
   Node* m_head = nullptr;
@@ -301,17 +315,39 @@ class Module {
 public:
   using Functions = std::deque<Function>;  
 
+  Module(IdIndex name, uint32_t base_index = 0) : m_name(name), m_base_index(base_index) {}
+
+  IdIndex get_name() const { return m_name; }
+
   Function& add_function(FunctionBuilder& builder) {
     m_functions.emplace_back(builder);
-    return m_functions.back();
+    auto& fun = m_functions.back();
+    setup_function(fun);
+    return fun;
   }
 
-  Functions& get_functions() { return m_functions; }
-  const Functions& get_functions() const { return m_functions; }
+  Function& add_function(FunctionBuilder&& builder) {
+    m_functions.emplace_back(std::move(builder));
+    auto& fun = m_functions.back();
+    setup_function(fun);
+    return fun;
+  }
+
+  Function& get_function(uint32_t index) { return m_functions[index - m_base_index]; }
+  const Function& get_function(uint32_t index) const { return m_functions[index - m_base_index]; }
 
 private:
+  IdIndex m_name;
   Functions m_functions; 
   uint32_t m_base_index;
+
+  using Dict = OrderedDict<IdIndex, uint32_t, typename IdIndex::Hash>;
+  Dict m_dict;
+
+  void setup_function(Function& fun) {
+    const uint32_t fun_index = m_base_index + m_functions.size() - 1;
+    fun.set_index(fun_index);
+  }
 };
 
 }

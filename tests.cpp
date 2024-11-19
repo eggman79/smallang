@@ -40,7 +40,7 @@ TEST(Ast, Scope) {
 }
 
 TEST(OrderedDict, Simple) {
-  OrderedDict<IdIndex, AstNodeIndex, IdIndexHash> dict;
+  OrderedDict<IdIndex, AstNodeIndex, IdIndex::Hash> dict;
   IdCache id_cache;
   Ast ast;
   {
@@ -229,8 +229,10 @@ TEST(Parser, Simple) {
 
 TEST(Ir, Simple) {
   using namespace ir;
+  IdCache id_cache;
   auto builder = FunctionBuilder().set_args_size(2).set_locals_size(3);
-  Function f(builder);
+  Module m(id_cache.get("mod"));
+  auto& f = m.add_function(builder);
   auto& add = f.add(Instr::add, Type::D, Arg{.local_index=1}, Arg{.local_index=2}, Arg{.local_index=3});
   auto& mov = f.add(Instr::mov, Type::D, Arg{.local_index=1}, Arg{.local_index=2});
   auto& jmp = f.add(Instr::jmp, Type::V, Arg{.node_pointer=&add});
@@ -252,7 +254,9 @@ TEST(Ir, Compact) {
     .set_args_size(2)
     .add_const(Value{.i_value = 1, .type = Type::I});
 
-  Function f(builder);
+  IdCache id_cache;
+  Module m(id_cache.get("mod"));
+  auto& f = m.add_function(builder);
   f.add(Instr::add, Type::I, Arg{.local_index = 1}, Arg{.local_index = 1}, Arg{.local_index = 2});
   f.add(Instr::add, Type::I, Arg{.local_index = 1}, Arg{.local_index = 1}, Arg{.local_index = 2});
   auto& third_node = f.add(Instr::add, Type::I, Arg{.local_index = 1}, Arg{.local_index = 1}, Arg{.local_index = 2});
@@ -270,8 +274,22 @@ TEST(Ir, Test) {
     .set_locals_size(2)
     .add_const(Value{.str_value = id_cache.get("test", 4)})
     .add_const(Value{.i_value = 100});
-  Function f(builder);
+  Module m(id_cache.get("mod"));
+  auto& f = m.add_function(std::move(builder));
   f.add(Instr::mov, Type::I, Arg{.local_index = 1});
+}
+
+TEST(Function, Name) {
+  using namespace ir;
+  IdCache id_cache;
+  auto builder = FunctionBuilder()
+    .set_name(id_cache.get("foo",3))
+    .set_args_size(2)
+    .set_locals_size(2)
+    .add_const(Value{.str_value = id_cache.get("str", 3)});
+
+  Module m(id_cache.get("mod"));
+  m.add_function(builder);
 }
 
 int main(int argc, char* argv[]) {
