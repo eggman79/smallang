@@ -32,3 +32,44 @@ f1:
   addrr -2 -2 -1
 
 
+
+
+//////////////////
+
+
+
+class C {
+  constructor(int a, string s) {
+    this.a = a;
+    this.s = s;
+  }
+
+  a: int
+  s: string
+}
+
+fun test(c: C) {
+  c = C()
+  c.a = 1;
+  c.s = "tetew"
+}
+
+
+test(LC;):
+  .references "C.constructor(IS)", "C.a", "C.b"
+  .consts 1, "tetew"
+  .locals 0
+  .args 1
+  new -1 0 # 1 - c, 0 -> ref "C.constructor(IS)"
+  putfieldi -1 1 0 # -1 - c, 1 - "C.a", 0 - const 1
+  putfieldi -1 2 1
+
+
+
+
+  
+  
+
+
+  
+

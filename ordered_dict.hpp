@@ -29,16 +29,17 @@ public:
     m_nodes.emplace_back(node_index);
   }
 
-  AstNodeIndex find(Key name) const {
+  const Value find(Key name) const {
     auto it = m_map.find(name);
 
     if (it == m_map.end()) {
-      return UndefinedAstNodeIndex;
+      return Value();
     }
     return it->second;
   }
 
   const std::vector<Value>& get_nodes() const { return m_nodes;}
+  std::vector<Value>& get_nodes() { return m_nodes;}
 
 private:
   using Map = std::unordered_map<Key, Value, Hash, Equal>;

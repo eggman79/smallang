@@ -230,9 +230,9 @@ TEST(Parser, Simple) {
 TEST(Ir, Simple) {
   using namespace ir;
   IdCache id_cache;
-  auto builder = FunctionBuilder().set_args_size(2).set_locals_size(3);
+  auto builder = FunctionBuilder(id_cache.get("foo")).set_args_size(2).set_locals_size(3);
   Module m(id_cache.get("mod"));
-  auto& f = m.add_function(builder);
+  auto& f = m.add_function(std::move(builder));
   auto& add = f.add(Instr::add, Type::D, Arg{.local_index=1}, Arg{.local_index=2}, Arg{.local_index=3});
   auto& mov = f.add(Instr::mov, Type::D, Arg{.local_index=1}, Arg{.local_index=2});
   auto& jmp = f.add(Instr::jmp, Type::V, Arg{.node_pointer=&add});
@@ -249,14 +249,14 @@ TEST(Ir, Simple) {
 
 TEST(Ir, Compact) {
   using namespace ir;
-  auto builder = FunctionBuilder()
+  IdCache id_cache;
+  auto builder = FunctionBuilder(id_cache.get("test"))
     .set_locals_size(2)
     .set_args_size(2)
     .add_const(Value{.i_value = 1, .type = Type::I});
 
-  IdCache id_cache;
   Module m(id_cache.get("mod"));
-  auto& f = m.add_function(builder);
+  auto& f = m.add_function(std::move(builder));
   f.add(Instr::add, Type::I, Arg{.local_index = 1}, Arg{.local_index = 1}, Arg{.local_index = 2});
   f.add(Instr::add, Type::I, Arg{.local_index = 1}, Arg{.local_index = 1}, Arg{.local_index = 2});
   auto& third_node = f.add(Instr::add, Type::I, Arg{.local_index = 1}, Arg{.local_index = 1}, Arg{.local_index = 2});
@@ -269,7 +269,7 @@ TEST(Ir, Compact) {
 TEST(Ir, Test) {
   using namespace ir;
   IdCache id_cache;
-  auto builder = FunctionBuilder()
+  auto builder = FunctionBuilder(id_cache.get("f"))
     .set_args_size(0)
     .set_locals_size(2)
     .add_const(Value{.str_value = id_cache.get("test", 4)})
@@ -282,14 +282,15 @@ TEST(Ir, Test) {
 TEST(Function, Name) {
   using namespace ir;
   IdCache id_cache;
-  auto builder = FunctionBuilder()
-    .set_name(id_cache.get("foo",3))
+  auto builder = FunctionBuilder(id_cache.get("f"))
     .set_args_size(2)
     .set_locals_size(2)
     .add_const(Value{.str_value = id_cache.get("str", 3)});
 
   Module m(id_cache.get("mod"));
-  m.add_function(builder);
+  auto& f = m.add_function(std::move(builder));
+  auto f_index = m.find_function(id_cache.get("f"));
+  EXPECT_EQ(&m.get_function(f_index), &f);
 }
 
 int main(int argc, char* argv[]) {

@@ -16,11 +16,15 @@ namespace ir {
 struct NodePhantom {};
 using NodeIndex = StrongType<std::uint16_t, NodePhantom>;
 
+struct FunctionPhantom {};
+using FunctionIndex = StrongType<std::uint32_t, FunctionPhantom>;
+
 enum class Type: uint8_t {
   I,
   L,
   D,
   S,
+  A,
   V,
 };
 enum class Instr: std::uint8_t {
@@ -105,7 +109,12 @@ struct NodeArgs : Node {
 
 class FunctionBuilder {
 public:
-  FunctionBuilder& set_name(IdIndex name) { m_name = name; return *this; }
+  FunctionBuilder(IdIndex name) : m_name(name) {}
+  FunctionBuilder(const FunctionBuilder&) = default;
+  FunctionBuilder(FunctionBuilder&&) = default;
+  FunctionBuilder& operator=(const FunctionBuilder&) = default;
+  FunctionBuilder& operator=(FunctionBuilder&&) = default;
+
   FunctionBuilder& set_args_size(uint16_t size) { m_args_size = size; return *this; }
   FunctionBuilder& set_locals_size(uint16_t size) { m_locals_size = size; return *this; }
   FunctionBuilder& add_const(Value&& value) { m_consts.emplace_back(std::move(value)); return *this; }
@@ -241,6 +250,8 @@ public:
     return add_impl<Node>(instr, type);
   }
 
+  IdIndex get_name() const { return m_name; }
+
   template <typename...Args>
   inline Node& add(Instr instr, Type type, Args&&...args) {
     constexpr auto args_count = sizeof...(args);
@@ -258,12 +269,6 @@ public:
 
   Node* get_head() const { return m_head;}
   Node* get_tail() const { return m_tail;}
-
-  Function(FunctionBuilder& builder) : 
-    m_name(builder.get_name()),
-    m_consts(builder.get_consts()),
-    m_args_size(builder.get_args_size()), 
-    m_locals_size(builder.get_locals_size()) {}
 
   Function(FunctionBuilder&& builder) : 
     m_name(builder.get_name()),
@@ -319,35 +324,42 @@ public:
 
   IdIndex get_name() const { return m_name; }
 
-  Function& add_function(FunctionBuilder& builder) {
-    m_functions.emplace_back(builder);
-    auto& fun = m_functions.back();
-    setup_function(fun);
-    return fun;
-  }
-
   Function& add_function(FunctionBuilder&& builder) {
+    FunctionIndex fun_idx(m_functions.size());
     m_functions.emplace_back(std::move(builder));
     auto& fun = m_functions.back();
+    m_dict.append(fun.get_name(), fun_idx);
     setup_function(fun);
     return fun;
   }
 
-  Function& get_function(uint32_t index) { return m_functions[index - m_base_index]; }
-  const Function& get_function(uint32_t index) const { return m_functions[index - m_base_index]; }
+  Function& get_function(FunctionIndex index) {
+    return m_functions[index.get() - m_base_index];
+  }
+
+  FunctionIndex find_function(IdIndex name) const {
+    return m_dict.find(name);
+  }
 
 private:
   IdIndex m_name;
-  Functions m_functions; 
   uint32_t m_base_index;
+  std::deque<Function> m_functions;
 
-  using Dict = OrderedDict<IdIndex, uint32_t, typename IdIndex::Hash>;
+  using Dict = OrderedDict<IdIndex, FunctionIndex, typename IdIndex::Hash>;
   Dict m_dict;
 
   void setup_function(Function& fun) {
-    const uint32_t fun_index = m_base_index + m_functions.size() - 1;
+    const uint32_t fun_index = m_base_index + m_dict.get_nodes().size() - 1;
     fun.set_index(fun_index);
   }
+};
+
+class Context {
+public:
+private:
+  using Functions = std::vector<Function>;
+  Functions m_functions;
 };
 
 }

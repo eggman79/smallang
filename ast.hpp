@@ -207,7 +207,7 @@ struct AstNode {
 struct Scope {
     AstNodeIndex outer_scope;
     IdIndex name;
-        using Dict = OrderedDict<IdIndex, AstNodeIndex, IdIndex::Hash>;
+    using Dict = OrderedDict<IdIndex, AstNodeIndex, IdIndex::Hash>;
     Dict* dict;
 
     void add_node(AstNodeIndex node_idx, IdIndex name = IdIndex::undefined) {
