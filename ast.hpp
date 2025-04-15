@@ -14,15 +14,13 @@ struct AstNode {
   enum class Kind {
     None, Type, Value, 
     I8Type, I16Type, I32Type, U8Type, U16Type, U32Type, F32Type, F64Type, 
-    StructType, UnionType,
-    FunType, FunTypeWithNamedParams, LocalVariable, GlobalVariable, StringLiteral, CharLiteral,
-    I8Literal, I16Literal, I32Literal, U8Literal, U16Literal, U32Literal, 
-    F32Literal, F64Literal,
+    StructType, UnionType, FunType, FunTypeWithNamedParams, LocalVariable, 
+    GlobalVariable, StringLiteral, CharLiteral, I8Literal, I16Literal, 
+    I32Literal, U8Literal, U16Literal, U32Literal, F32Literal, F64Literal,
     AssignExpr, EqualExpr, GreatExpr, GreatOrEqualExpr, LessExpr, LessOrEqualExpr, 
-    ParenthExpr, NegExpr,
-    StructField, UnionField,
-    Function, Struct, Union, BlockScope, GlobalScope,
-    VariableDeclStmt, BlockStmt, FunctionDeclStmt, StructDeclStmt, UnionDeclStmt, IfElseStmt, WhileStmt, ExprStmt, ReturnStmt,
+    ParenthExpr, NegExpr, StructField, UnionField, Function, Struct, Union, 
+    BlockScope, GlobalScope, VariableDeclStmt, BlockStmt, FunctionDeclStmt, 
+    StructDeclStmt, UnionDeclStmt, IfElseStmt, WhileStmt, ExprStmt, ReturnStmt,
   };
   enum class StatementKind {};
 
@@ -30,6 +28,7 @@ struct AstNode {
     memset((void*)this, 0, sizeof(AstNode));
     this->kind = kind;
   }
+
   AstNode(const AstNode&) = delete;
   AstNode(AstNode&&) = delete;
   AstNode& operator=(const AstNode&) = delete;
@@ -204,7 +203,7 @@ struct AstNode {
       names->emplace_back(id);
     }
   };
-struct Scope {
+  struct Scope {
     AstNodeIndex outer_scope;
     IdIndex name;
     using Dict = OrderedDict<IdIndex, AstNodeIndex, IdIndex::Hash>;
@@ -218,10 +217,10 @@ struct Scope {
         dict->append(node_idx);
       }
     }
-    };
-struct StructOrUnion {
-      Scope scope;
-    };
+  };
+  struct StructOrUnion {
+    Scope scope;
+  };
 
 
   union {
@@ -269,7 +268,7 @@ struct StructOrUnion {
       uint32_t offset;
     } struct_field;
 
-    
+
     Scope scope;
 
     struct {
@@ -286,7 +285,7 @@ struct StructOrUnion {
       AstNodeIndex function_type_with_named_params;
     } function;
 
-        StructOrUnion struc;
+    StructOrUnion struc;
     StructOrUnion unio;
 
     struct {

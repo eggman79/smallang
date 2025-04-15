@@ -9,9 +9,9 @@
 #include "parser.hpp"
 #include "ast.hpp"
 #include "id_cache.hpp"
-#include "ir_value.hpp"
 #include "strong_type.hpp"
 #include "ir.hpp"
+#include "vm.hpp"
 
 TEST(IdCache, Simple) {
   IdCache id_cache;
@@ -231,7 +231,8 @@ TEST(Ir, Simple) {
   using namespace ir;
   IdCache id_cache;
   auto builder = FunctionBuilder(id_cache.get("foo")).set_args_size(2).set_locals_size(3);
-  Module m(id_cache.get("mod"));
+  Context context;
+  auto& m = context.add_module(id_cache.get("mod"));
   auto& f = m.add_function(std::move(builder));
   auto& add = f.add(Instr::add, Type::D, Arg{.local_index=1}, Arg{.local_index=2}, Arg{.local_index=3});
   auto& mov = f.add(Instr::mov, Type::D, Arg{.local_index=1}, Arg{.local_index=2});
@@ -287,10 +288,32 @@ TEST(Function, Name) {
     .set_locals_size(2)
     .add_const(Value{.str_value = id_cache.get("str", 3)});
 
-  Module m(id_cache.get("mod"));
+  Context ctx;
+  auto& m = ctx.add_module(id_cache.get("mod"));
   auto& f = m.add_function(std::move(builder));
   auto f_index = m.find_function(id_cache.get("f"));
   EXPECT_EQ(&m.get_function(f_index), &f);
+  auto mod_index = ctx.find_module(id_cache.get("mod"));
+  EXPECT_EQ(&ctx.get_module(mod_index), &m);
+}
+
+TEST(Vm, Test) {
+  using namespace ir;
+  Context context;
+  IdCache id_cache;
+  auto& mod = context.add_module(id_cache.get("example"));
+
+  auto fun_builder = FunctionBuilder(id_cache.get("main"))
+    .set_args_size(2)
+    .set_locals_size(1)
+    .add_const(Value{.i_value = 100});
+
+  auto& fun = mod.add_function(std::move(fun_builder));
+  fun.add(Instr::add, Type::I, Arg{.local_index = 3}, Arg{.local_index = 0}, Arg{.local_index = 1});
+  fun.add(Instr::ret, Type::I, Arg{.local_index = 3});
+
+  Vm vm(context);
+  vm.run(id_cache.get("example"), id_cache.get("main"));
 }
 
 int main(int argc, char* argv[]) {

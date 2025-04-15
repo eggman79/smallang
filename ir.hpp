@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <memory>
 #include <vector>
 #include <array>
 #include <deque>
@@ -19,6 +18,9 @@ using NodeIndex = StrongType<std::uint16_t, NodePhantom>;
 struct FunctionPhantom {};
 using FunctionIndex = StrongType<std::uint32_t, FunctionPhantom>;
 
+struct ModulePhantom {};
+using ModuleIndex = StrongType<std::uint32_t, ModulePhantom>;
+
 enum class Type: uint8_t {
   I,
   L,
@@ -32,6 +34,10 @@ enum class Instr: std::uint8_t {
   jmp, jg, jl, jge, jle, je, jne, jz, jnz,
   call, callv, ret, retv, label,
 };
+
+static constexpr inline uint16_t instr_type(Instr instr, Type type) {
+  return (uint16_t)instr | ((uint16_t)type << (sizeof(instr) * 8));
+}
 
 static std::size_t instr_to_args_count(Instr instr, Type type) {
   switch (instr) {
@@ -168,7 +174,6 @@ public:
     while (node) {
       auto next = node->m_next;
 
-
       const auto offset = m_compacted_code.size();
       compact_bytes(node->m_instr);
       compact_bytes(node->m_type);
@@ -246,6 +251,7 @@ public:
     m_compacted = true;
     m_compacted_code.shrink_to_fit();
   }
+
   inline Node& add(Instr instr, Type type) {
     return add_impl<Node>(instr, type);
   }
@@ -357,11 +363,28 @@ private:
 
 class Context {
 public:
-private:
-  using Functions = std::vector<Function>;
-  Functions m_functions;
-};
+  using Modules = std::deque<Module>;
+  using ModulesDict = OrderedDict<IdIndex, ModuleIndex, typename IdIndex::Hash>;
 
+  Module& add_module(IdIndex name, uint32_t base_index = 0) {
+    ModuleIndex module_index(m_modules.size());
+    m_modules_dict.append(name, module_index);
+    m_modules.emplace_back(name, base_index);
+    return m_modules.back();
+  }
+
+  Module& get_module(ModuleIndex index) {
+    return m_modules[index.get()];
+  }
+
+  ModuleIndex find_module(IdIndex name) const {
+    return m_modules_dict.find(name);
+  }
+
+private:
+  Modules m_modules;
+  ModulesDict m_modules_dict;
+};
 }
 
 #endif  // IR_HPP

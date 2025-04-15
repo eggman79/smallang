@@ -1,0 +1,27 @@
+[
+{
+  "directory": "/smallang",
+  "command": "/usr/bin/c++   -g -o CMakeFiles/smallang_lib.dir/token.cpp.o -c /smallang/token.cpp",
+  "file": "/smallang/token.cpp"
+},
+{
+  "directory": "/smallang",
+  "command": "/usr/bin/c++   -g -o CMakeFiles/smallang_lib.dir/parser.cpp.o -c /smallang/parser.cpp",
+  "file": "/smallang/parser.cpp"
+},
+{
+  "directory": "/smallang",
+  "command": "/usr/bin/c++   -g -o CMakeFiles/smallang_lib.dir/vm.cpp.o -c /smallang/vm.cpp",
+  "file": "/smallang/vm.cpp"
+},
+{
+  "directory": "/smallang",
+  "command": "/usr/bin/c++   -g -std=gnu++23 -o CMakeFiles/smallang.dir/main.cpp.o -c /smallang/main.cpp",
+  "file": "/smallang/main.cpp"
+},
+{
+  "directory": "/smallang",
+  "command": "/usr/bin/c++  -I/smallang/GTest::GTest -g -DGTEST_HAS_PTHREAD=1 -o CMakeFiles/smallang_test.dir/tests.cpp.o -c /smallang/tests.cpp",
+  "file": "/smallang/tests.cpp"
+}
+]

@@ -117,7 +117,7 @@ private:
     m_tokens.emplace_back(kind);
   }
 
-  void omit_white_spaces() {
+  inline void omit_white_spaces() {
     while (::isspace(last_char())) {
       next_char();
     }

@@ -2,7 +2,6 @@
 #define ID_INDEX_HPP
 
 #include <cstdint>
-#include <limits>
 #include "strong_type.hpp"
 
 struct IdIndexPhantom {};
